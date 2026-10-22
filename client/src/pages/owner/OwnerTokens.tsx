@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { Button, ConfirmDialog, EmptyState, ErrorState, PageHeader, Skeleton, inputCls } from '../../components/ui';
-import { PaymentDialog } from '../../components/PaymentDialog';
-import { VoidPaymentDialog } from '../../components/VoidPaymentDialog';
 import { TokenCard } from '../../components/TokenCard';
 import { useAction } from '../../hooks/useAction';
 import { useFetch } from '../../hooks/useFetch';
@@ -17,9 +15,7 @@ export default function OwnerTokens() {
   const [source, setSource] = useState<TokenSource | ''>('');
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
-  const [paying, setPaying] = useState<StaffToken | null>(null);
   const [cancelling, setCancelling] = useState<StaffToken | null>(null);
-  const [unpaying, setUnpaying] = useState<StaffToken | null>(null);
   const { busy, run } = useAction();
 
   const { data, error, loading, reload } = useFetch(
@@ -102,8 +98,6 @@ export default function OwnerTokens() {
                         <Button size="sm" variant="danger" onClick={() => setCancelling(t)}><X className="h-4 w-4" aria-hidden /> Cancel</Button>
                       </>
                     )}
-                    {t.status === 'completed' && !t.paid && <Button size="sm" variant="primary" onClick={() => setPaying(t)}>Record payment</Button>}
-                    {t.status === 'completed' && t.paid && <Button size="sm" onClick={() => setUnpaying(t)}>Mark unpaid</Button>}
                   </>
                 }
               />
@@ -119,8 +113,6 @@ export default function OwnerTokens() {
         </>
       ) : <EmptyState title="No tokens match these filters." hint="Try another date or clear a filter." />}
 
-      {paying && <PaymentDialog token={paying} onClose={() => setPaying(null)} onDone={() => { setPaying(null); void reload(true); }} />}
-      {unpaying && <VoidPaymentDialog token={unpaying} onClose={() => setUnpaying(null)} onDone={() => { setUnpaying(null); void reload(true); }} />}
       <ConfirmDialog
         open={!!cancelling}
         title="Cancel this token?"

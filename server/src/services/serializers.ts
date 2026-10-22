@@ -37,7 +37,6 @@ type PopulatedBarber = { _id: unknown; name: string } | null | undefined;
 export function toStaffToken(
   t: TokenLean & { customerId?: unknown; barberId?: unknown },
   snap?: QueueSnapshot,
-  extra: { paid?: boolean; payment?: { paidAt: Date; amount: number; method: string } | null } = {},
 ) {
   const customer = (t.customerId && typeof t.customerId === 'object' && 'phone' in (t.customerId as object)
     ? (t.customerId as PopulatedCustomer)
@@ -65,12 +64,6 @@ export function toStaffToken(
     completedAt: t.completedAt,
     position: snap && t.status === 'waiting' ? snap.positionOf(t._id) : null,
     estimatedWaitMinutes: snap && t.status === 'waiting' ? snap.estimates.byToken.get(String(t._id)) ?? null : null,
-    paid: extra.paid ?? null,
-    /** Only meaningful for completed tokens, and only when payment data was loaded for this view. */
-    paymentStatus: t.status === 'completed' && extra.paid !== undefined ? (extra.paid ? 'paid' : 'unpaid') : null,
-    paidAt: extra.payment?.paidAt ?? null,
-    paidAmount: extra.payment?.amount ?? null,
-    paymentMethod: extra.payment?.method ?? null,
     trackingToken: makeTrackingToken(t._id),
   };
 }

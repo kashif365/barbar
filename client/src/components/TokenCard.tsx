@@ -1,16 +1,22 @@
 import type { ReactNode } from 'react';
 import { Pill, SourceBadge, StatusBadge, cx } from './ui';
 import type { StaffToken } from '../types';
-import { METHOD_LABEL, formatDateTime, formatPKR, formatTime, waitText } from '../utils/format';
+import { formatPKR, formatTime, waitText } from '../utils/format';
 
 /** One token in a staff list. Actions are passed in so the owner desk and barber desk share the layout. */
 export function TokenCard({ t, actions, highlight, showWait = true }: { t: StaffToken; actions?: ReactNode; highlight?: boolean; showWait?: boolean }) {
   return (
-    <li className={cx('rounded-2xl border bg-card p-4', highlight ? 'border-gold/60' : 'border-line')}>
+    <li
+      className={cx(
+        'relative overflow-hidden rounded-2xl border bg-gradient-to-b from-card to-panel p-4 transition-colors sm:p-5',
+        highlight ? 'border-gold/60 shadow-[0_0_0_1px_rgba(201,164,92,0.25),0_20px_50px_-30px_rgba(201,164,92,0.5)]' : 'border-line hover:border-gold/30',
+      )}
+    >
+      {highlight && <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-gold-gradient" />}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-2xl font-extrabold tracking-tight">{t.tokenNumber}</p>
-          <p className="truncate font-medium">{t.customerName}</p>
+          <p className="font-display text-gold-gradient text-3xl font-semibold">{t.tokenNumber}</p>
+          <p className="truncate font-semibold text-cream">{t.customerName}</p>
           {t.customerPhone && <a href={`tel:${t.customerPhone}`} className="text-xs text-muted underline">{t.customerPhone}</a>}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1.5">
@@ -26,13 +32,6 @@ export function TokenCard({ t, actions, highlight, showWait = true }: { t: Staff
         {t.barberName ? <Pill>{t.barberName}</Pill> : t.status === 'waiting' && <Pill>First available</Pill>}
         {t.status === 'waiting' && showWait && <span>Est. start: {waitText(t.estimatedWaitMinutes)}</span>}
         {t.skipReason === 'no_show' && <Pill tone="warn">No-show</Pill>}
-        {t.status === 'completed' && (t.paid ? (
-          <Pill tone="ok">
-            Paid{t.paidAmount !== null ? ` ${formatPKR(t.paidAmount)}` : ''}
-            {t.paymentMethod ? ` · ${METHOD_LABEL[t.paymentMethod]}` : ''}
-            {t.paidAt ? ` · ${formatDateTime(t.paidAt)}` : ''}
-          </Pill>
-        ) : t.paid === false ? <Pill tone="warn">Unpaid</Pill> : null)}
       </div>
       {actions && <div className="mt-3 flex flex-wrap gap-2">{actions}</div>}
     </li>

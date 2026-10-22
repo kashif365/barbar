@@ -66,15 +66,12 @@ export const endpoints = {
   cancelToken: (id: string) => data<{ token: StaffToken }>(api.patch(`/staff/tokens/${id}/cancel`)),
   requeueToken: (id: string) => data<{ token: StaffToken }>(api.patch(`/staff/tokens/${id}/requeue`)),
   setAvailability: (availability: string) => data<{ availability: string }>(api.patch('/staff/availability', { availability })),
-  recordPayment: (id: string, body: { amount?: number; method: 'cash' | 'card' | 'mobile_wallet' }) =>
-    data<{ payment: { id: string; amount: number } }>(api.post(`/staff/tokens/${id}/payment`, body)),
 
   // owner
   dashboard: () => data<Dashboard>(api.get('/owner/dashboard')),
   ownerTokens: (params: Record<string, string | number | undefined>) => data<Paged<StaffToken>>(api.get('/owner/tokens', { params })),
   dailyReport: (date?: string) => data<{ report: Report }>(api.get('/owner/reports/daily', { params: { date } })),
   rangeReport: (from: string, to: string) => data<{ report: Report }>(api.get('/owner/reports/range', { params: { from, to } })),
-  voidPayment: (id: string, reason?: string) => data<{ ok: boolean }>(api.patch(`/staff/tokens/${id}/payment/void`, { reason: reason || undefined })),
   monthlyReport: (month?: string) => data<{ report: Report }>(api.get('/owner/reports/monthly', { params: { month } })),
   ownerServices: () => data<{ items: AdminService[] }>(api.get('/owner/services')),
   createService: (b: Omit<AdminService, 'id' | 'currency'>) => data<{ service: AdminService }>(api.post('/owner/services', b)),

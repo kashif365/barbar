@@ -37,8 +37,6 @@ s.patch('/tokens/:id/complete', requireRole('barber', 'owner'), staff.completeTo
 s.patch('/tokens/:id/skip', staff.skipToken);
 s.patch('/tokens/:id/cancel', requireRole('owner', 'staff'), staff.cancelToken);
 s.patch('/tokens/:id/requeue', requireRole('owner', 'staff'), staff.requeueToken);
-s.post('/tokens/:id/payment', requireRole('owner', 'staff'), staff.addPayment);
-s.patch('/tokens/:id/payment/void', requireRole('owner'), staff.voidTokenPayment);
 s.patch('/availability', requireRole('barber'), staff.setAvailability);
 api.use('/staff', s);
 
@@ -58,7 +56,6 @@ o.get('/barbers', owner.listBarbers);
 o.post('/barbers', owner.createBarber);
 o.patch('/barbers/:id', owner.updateBarber);
 o.patch('/tokens/:id/reassign', owner.reassign);
-o.post('/tokens/:id/payment', staff.addPayment);
 o.get('/settings', owner.getOwnerSettings);
 o.patch('/settings', owner.updateSettings);
 o.get('/audit', owner.listAudit);

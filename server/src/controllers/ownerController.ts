@@ -21,8 +21,7 @@ import {
   settingsUpdateSchema,
 } from '../validators';
 import { getQueueSnapshot } from '../services/queueService';
-import { buildReport, unpaidCompleted } from '../services/reportService';
-import { paidPaymentsFor } from '../services/paymentService';
+import { buildReport } from '../services/reportService';
 import { audit } from '../services/auditService';
 import { reassignToken } from '../services/queueActions';
 import { getSettings } from '../services/settingsService';
@@ -59,7 +58,7 @@ const barberView = (u: UserLean, completedToday = 0, busy = false) => ({
 
 export const dashboard = asyncHandler(async (_req, res) => {
   const today = businessDateOf();
-  const [snap, report, outstanding] = await Promise.all([getQueueSnapshot(), buildReport(today, today), unpaidCompleted()]);
+  const [snap, report] = await Promise.all([getQueueSnapshot(), buildReport(today, today)]);
   res.json({
     businessDate: today,
     totalTokens: report.totalTokens,
@@ -68,20 +67,8 @@ export const dashboard = asyncHandler(async (_req, res) => {
     completed: report.byStatus.completed,
     cancelled: report.byStatus.cancelled,
     skipped: report.byStatus.skipped,
-    revenue: report.revenue.total,
-    completedUnpaid: report.completedUnpaid,
-    /**
-     * Money view. receivedToday/paidServicesToday count payments RECORDED today (even for services booked or
-     * completed earlier). Unpaid amounts are shown separately and are never part of received revenue.
-     */
-    payments: {
-      receivedToday: report.revenue.total,
-      paidServicesToday: report.revenue.paymentsCount,
-      completedTodayUnpaidCount: report.completedUnpaid,
-      completedTodayUnpaidAmount: report.completedUnpaidAmount,
-      outstandingCount: outstanding.count,
-      outstandingAmount: outstanding.amount,
-    },
+    /** Booked price of services completed today. Customers pay the barber in person; nothing is recorded in the app. */
+    earnings: report.earnings,
     currency: 'PKR',
     popularServices: report.popularServices.slice(0, 5),
     bySource: report.bySource,
@@ -132,8 +119,7 @@ export const listTokens = asyncHandler(async (req, res) => {
       .lean<TokenLean[]>(),
     getQueueSnapshot(),
   ]);
-  const paid = await paidPaymentsFor(items.map((t) => t._id));
-  res.json({ items: await decorate(items, snap, paid), page: q.page, limit: q.limit, total, pages: Math.ceil(total / q.limit) });
+  res.json({ items: await decorate(items, snap), page: q.page, limit: q.limit, total, pages: Math.ceil(total / q.limit) });
 });
 
 export const reassign = asyncHandler(async (req, res) => {

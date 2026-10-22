@@ -1,8 +1,11 @@
 # The Shehraz Barber — digital token & queue system
 
-MERN (MongoDB, Express, React + Vite, Node) app that replaces paper token slips. Online and walk-in customers share **one FIFO queue**; barbers call and complete tokens; the owner manages services, staff, payments and reports; everything updates live over Socket.IO.
+MERN (MongoDB, Express, React + Vite, Node) app that replaces paper token slips. Online and walk-in customers share **one FIFO queue**; barbers call and complete tokens; the owner manages services, staff and reports (customers pay their barber in person, so the app records no payments); everything updates live over Socket.IO.
 
 > **Status (2026-10-18): installs, typechecks and builds; tests and runtime not yet verified.** `npm install`, server `typecheck` and `build`, and the client `build` all pass. The server test suite (`npm test`) has **not been run** because `mongodb-memory-server` could not download its MongoDB binary in the build sandbox, and the app has **never been run against a database or in a browser**. Follow [First run checklist](#first-run-checklist). Nothing here is deployed.
+
+## Photos and videos
+Drop files into `client/public/media/` (names listed in `client/public/media/README.txt`: `hero.mp4`, `hero.jpg`, `about.jpg`, `cta.jpg`, `gallery-1.jpg` … `gallery-6.jpg`). Missing files show a styled placeholder. Paths and gallery captions live in `client/src/config/media.ts`. Rebuild the client after adding files.
 
 ## Project structure
 
@@ -75,7 +78,7 @@ Manual checks (owner = the account you seeded):
 1. **Booking:** `/book`, create a token, open its tracking link, refresh.
 2. **Live queue (`/owner/queue`):** *Start service* on a waiting token (needs an available barber; otherwise you get a clear "No available barber" message), then *Complete service*. The token leaves the active lists and appears under *Completed today* and *All tokens*. Also try Skip, Cancel and Re-queue.
 3. **Barber (`/barber`):** set Available, Call next, Complete; the customer tracking page and `/queue` update live.
-4. **Payments and reports:** complete a service and confirm it shows **Unpaid** and is *not* in Overview "Received today". Record a payment (reception or owner): it becomes **Paid**, "Received today" and "Paid services" rise, and the outstanding amount drops. As owner use *Mark unpaid* (revenue drops again). Open Reports > *range*, try *Last 7 / 30 days*, a reversed range (clear warning) and *Export CSV*. Sign in as reception: *Mark unpaid* must not appear. Open `/owner/reports` signed out or as a barber: you are redirected.
+4. **Reports:** complete a few services, then open `/owner` (Earnings today = completed services × booked price) and Reports > *range*: try *Last 7 / 30 days*, a reversed range (clear warning) and *Export CSV*. Open `/owner/reports` signed out or as a barber: you are redirected.
 4b. **Token receipt:** after booking you land on the receipt. Check name, token number, service, price, booking time and status. Tap *Share Token* (on a phone: native share sheet; on desktop: details are copied), *Share on WhatsApp* (opens WhatsApp with the details) and *Download Token* (saves a PNG). Confirm no extra token was created (Live queue / All tokens). Open the page at 320 px: no sideways scrolling.
 5. **Settings (`/owner/settings`):** change text fields **and** each checkbox (online tokens, barber choice, phone required, enforce hours), press *Save settings* (a "Settings saved." message appears), refresh the page, then sign out and back in: every value must be unchanged. Try an invalid Instagram URL (e.g. `ftp://x`) and an empty salon name: you should see a clear error and nothing is saved.
 6. **Layout:** check widths 320 / 375 / 768 / 1024 / 1440 px (browser dev tools).
@@ -92,21 +95,21 @@ cd server && npm run typecheck && npm test      # first test run downloads a Mon
 cd client && npm run build                      # typechecks then builds
 ```
 Already verified: install, server typecheck/build, client build. **Still to verify:** `npm test`, and the manual smoke test below.
-Then manually: book a token at `/book`, sign in as a barber, *Call next*, *Complete*, record payment as owner, and check `/owner/reports`. Test the pages at 320 / 375 / 768 / 1024 / 1440 px.
+Then manually: book a token at `/book`, sign in as a barber, *Call next*, *Complete*, and check earnings on `/owner/reports`. Test the pages at 320 / 375 / 768 / 1024 / 1440 px.
 
 ## Dashboards and routes
 | Route | Role | Screen |
 |---|---|---|
-| `/owner` | owner | Overview (live metrics, **Payments & revenue** section: received today, paid services, completed-but-unpaid, outstanding unpaid; popular services; barber availability) |
-| `/owner/queue` | owner | Live queue: walk-in tokens, **Start service** (waiting) and **Complete service** (in service), reassign, skip, cancel, re-queue, return in-service to queue, record payment |
-| `/owner/tokens` | owner | All tokens by date with status/source/token-number filters and pagination; reassign and cancel waiting tokens; record payment / **mark unpaid** |
+| `/owner` | owner | Overview (live metrics, **earnings today**, popular services, barber availability) |
+| `/owner/queue` | owner | Live queue: walk-in tokens, **Start service** (waiting) and **Complete service** (in service), reassign, skip, cancel, re-queue, return in-service to queue |
+| `/owner/tokens` | owner | All tokens by date with status/source/token-number filters and pagination; reassign and cancel waiting tokens |
 | `/owner/services` | owner | Add/edit/activate/deactivate services, demo-vs-confirmed price flag, public preview |
 | `/owner/team` | owner | Add/edit/deactivate barbers and reception staff, service capabilities, availability, password reset |
-| `/owner/reports` | owner | Daily / monthly / **date-range** reports, recorded revenue vs completed-but-unpaid, popularity, source and barber breakdown, CSV export |
+| `/owner/reports` | owner | Daily / monthly / **date-range** reports, earnings (total, per day, per service, per barber), source breakdown, CSV export |
 | `/owner/audit` | owner | Audit log of the 100 most recent administrative actions |
 | `/owner/settings` | owner | Salon details, hours, booking rules |
 | `/barber` | barber | Availability, current customer, call next/start/complete, skip/no-show, completed-today history |
-| `/reception` | staff | Queue desk: walk-in tokens, skip, cancel, re-queue, record payment (cannot mark a payment unpaid) |
+| `/reception` | staff | Queue desk: walk-in tokens, skip, cancel, re-queue |
 | `/token/:trackingToken` | public | **Digital token receipt** (black-and-gold): greeting, token number, service, price, booking date/time, live status, queue position/wait only when the server has them; **Share Token**, **Share on WhatsApp**, **Download Token** (PNG) |
 
 Route guards are a UX convenience only; every API call is authorized on the server.
@@ -121,22 +124,17 @@ Route guards are a UX convenience only; every API call is authorized on the serv
 - **Queue position / wait:** computed from the current waiting set (never stored). Estimates simulate available barbers and snapshot durations; `null` ("estimate unavailable") when it can't be computed reliably.
 - **Owner start/complete:** the owner's *Start service* button calls the same `PATCH /staff/tokens/:id/start`. The status stored in MongoDB is `in_service` (shown as "In Service"). Because a token in service needs a serving barber, the server uses the barber assigned to the token, otherwise the first barber who is available, idle and offers the service; if nobody qualifies it returns 409 `NO_BARBER_AVAILABLE` and the token stays waiting. *Complete service* sets `completed` (it leaves the active queue and stays in the Completed list and All tokens). Both are atomic status-guarded updates, are audit-logged when done by the owner, and are owner/barber only (reception cannot).
 - **Skipped → re-queue:** only owner/reception; the customer goes to the **back** of the queue. In-service → waiting recovery is owner-only.
-- **Money:** payments are a separate collection (unique per token). Revenue = recorded payments only; completed-but-unpaid is reported separately; cancelled tokens can't be paid.
-  - *Paid / Unpaid:* a completed token is **Unpaid** until a payment is recorded; then **Paid** (with amount, method and time). Waiting, in-service, skipped and cancelled tokens have no payment status.
-  - *When revenue counts:* on the business date (Asia/Karachi) the payment was **recorded**, using the **server clock** (`paidAt`; any client-sent time is ignored). A service booked/completed yesterday and paid today is **today's** revenue. Unpaid amounts are never included.
-  - *Who can do what:* owner and reception record payments; only the owner can **mark unpaid**. That is a non-destructive correction: the payment is flagged `void` with who/when/why, stops counting as revenue at once, the record is kept, and it is audit-logged (`payment.void`). Paying again re-activates the same record. Barbers and the public cannot touch payments or reports (backend-enforced).
-  - *Existing data:* no migration is needed. Existing payments already have `status: "paid"` and the new void fields are optional; existing completed tokens without a payment simply show as Unpaid. Booking records and price snapshots are never modified.
+- **Money:** customers pay their barber in person (cash), so the app has **no payment recording**. *Earnings* = the price snapshotted at booking for every token **completed** in the period, attributed to the token's business date. Waiting, in-service, skipped and cancelled tokens count 0. A `payments` collection left over from older versions is ignored.
 - **Token receipt:** built only from the customer's own token data returned by the server (never hard-coded). Sharing, WhatsApp and Download are client-side and never call the booking API, so they cannot create another token. The share link is the customer's own tracking URL (no production URL is invented); phone numbers are never included. Native share is used when the browser supports it (receipt image + text); otherwise the details are copied or shown for manual copying. The PNG is drawn in the browser with the canvas API (no extra dependency).
 - **Price snapshots:** tokens store name, price and duration at booking time.
 
 ## Data model & indexes
-Collections: `services`, `users` (owner/barber/staff), `customers`, `tokens`, `dailycounters`, `payments`, `settings`, `auditlogs`.
+Collections: `services`, `users` (owner/barber/staff), `customers`, `tokens`, `dailycounters`, `settings`, `auditlogs`.
 
 | Collection | Indexes |
 |---|---|
 | tokens | unique `(businessDate, tokenNumber)`; `(businessDate, status, queuedAt, _id)`; `status`; unique partial `idempotencyKey`; unique partial `barberId` where `status=in_service` |
 | dailycounters | unique `businessDate` |
-| payments | unique `tokenId`; `(businessDate, status)` |
 | users | unique `email`; `(role, isActive)` |
 | services | unique case-insensitive `name`; `(isActive, sortOrder)` |
 | customers | unique partial `phone` |
@@ -144,8 +142,8 @@ Collections: `services`, `users` (owner/barber/staff), `customers`, `tokens`, `d
 ## API (`/api`)
 **Public:** `GET /health`, `GET /services`, `GET /services/:id`, `GET /barbers`, `GET /settings/public`, `GET /queue/today`, `POST /tokens/online`, `GET /tokens/:trackingToken`, `PATCH /tokens/:trackingToken/cancel`
 **Auth:** `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`
-**Staff (owner, barber, reception):** `GET /staff/queue`, `POST /staff/tokens/walk-in`, `PATCH /staff/tokens/:id/skip`; barber only: `POST /staff/queue/call-next`, `PATCH /staff/availability`; barber or owner: `PATCH /staff/tokens/:id/{start,complete}`; owner/reception: `PATCH /staff/tokens/:id/{cancel,requeue}`, `POST /staff/tokens/:id/payment`; owner only: `PATCH /staff/tokens/:id/payment/void`
-**Owner:** `GET /owner/dashboard`, `GET /owner/tokens`, `GET /owner/reports/{daily,monthly,range}` (`range?from=YYYY-MM-DD&to=YYYY-MM-DD`, max 366 days), `GET|POST /owner/services`, `PATCH|DELETE /owner/services/:id` (DELETE = soft deactivate), `GET|POST /owner/barbers`, `PATCH /owner/barbers/:id`, `PATCH /owner/tokens/:id/reassign`, `POST /owner/tokens/:id/payment`, `GET|PATCH /owner/settings`, `GET /owner/audit`
+**Staff (owner, barber, reception):** `GET /staff/queue`, `POST /staff/tokens/walk-in`, `PATCH /staff/tokens/:id/skip`; barber only: `POST /staff/queue/call-next`, `PATCH /staff/availability`; barber or owner: `PATCH /staff/tokens/:id/{start,complete}`; owner/reception: `PATCH /staff/tokens/:id/{cancel,requeue}`
+**Owner:** `GET /owner/dashboard`, `GET /owner/tokens`, `GET /owner/reports/{daily,monthly,range}` (`range?from=YYYY-MM-DD&to=YYYY-MM-DD`, max 366 days), `GET|POST /owner/services`, `PATCH|DELETE /owner/services/:id` (DELETE = soft deactivate), `GET|POST /owner/barbers`, `PATCH /owner/barbers/:id`, `PATCH /owner/tokens/:id/reassign`, `GET|PATCH /owner/settings`, `GET /owner/audit`
 
 Errors are `{ "error": { "code", "message", "details?" } }`.
 
@@ -166,7 +164,6 @@ Never commit `.env` files (they are git-ignored).
 ## Business rules & limitations
 - Opening hours, address and phone are **blank until the owner enters them**; nothing is invented. The Instagram link defaults to the official profile (https://www.instagram.com/the_shehraz_barber/) and can be changed in Settings.
 - Services 4–7 (Beard Trim, Hair Wash, Hair Styling, Face Cleanup) use **demo prices** and show "Demo Price — Confirm with salon". Durations are initial estimates.
-- Payments: one full payment per token. **No partial payments or refunds** yet.
 - Single salon: counters/indexes are not yet scoped by salon id (the spots to change are commented in code).
 - Rate limits are in-memory per server instance; use a shared store if you scale to several instances.
-- Not implemented: scheduled appointments, SMS/WhatsApp notifications, online payment gateways, Playwright end-to-end tests.
+- Not implemented: payment recording (by design: paid in person), scheduled appointments, SMS/WhatsApp notifications, Playwright end-to-end tests.

@@ -84,14 +84,13 @@ describe('authorization', () => {
     expect((await call(s.agent, 'post', '/api/staff/queue/call-next')).status).toBe(403);
   });
 
-  it('customers (no session) cannot call, complete, reassign or pay', async () => {
+  it('customers (no session) cannot call, complete or reassign', async () => {
     const t = await book(sid);
     const id = String((await (await import('../src/models')).Token.findOne())!._id);
     for (const [m, url] of [
       ['post', '/api/staff/queue/call-next'],
       ['patch', `/api/staff/tokens/${id}/complete`],
       ['patch', `/api/owner/tokens/${id}/reassign`],
-      ['post', `/api/owner/tokens/${id}/payment`],
     ] as const) {
       expect((await request(app)[m](url).set(H).send({})).status, url).toBe(401);
     }

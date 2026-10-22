@@ -2,6 +2,10 @@ import type { Availability, TokenStatus } from '../types';
 
 const TZ = 'Asia/Karachi';
 
+/** Up to two initials from a name, ignoring brackets and symbols ("[DEMO] Barber One" -> "BO"). */
+export const initialsOf = (name: string) =>
+  (name.replace(/\[[^\]]*\]/g, '').match(/\p{L}+/gu) ?? ['?']).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+
 export const formatPKR = (n: number) => `PKR ${n.toLocaleString('en-PK')}`;
 
 export const formatTime = (iso: string | null | undefined) =>
@@ -12,7 +16,6 @@ export const formatDateTime = (iso: string | null | undefined) =>
     ? new Intl.DateTimeFormat('en-GB', { timeZone: TZ, day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(iso))
     : '—';
 
-export const METHOD_LABEL = { cash: 'Cash', card: 'Card', mobile_wallet: 'Mobile wallet' } as const;
 
 /** YYYY-MM-DD plus n days (calendar arithmetic, independent of the browser's timezone). */
 export const addDays = (date: string, n: number) => {

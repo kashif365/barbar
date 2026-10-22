@@ -1,48 +1,128 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --color-ink: #080808;
-  --color-panel: #111111;
-  --color-card: #171717;
-  --color-line: #303030;
-  --color-muted: #a3a3a3;
-  --color-gold: #b9a477;
-  --color-gold-strong: #cdbb92;
-  --color-ok: #4ade80;
-  --color-warn: #fbbf24;
-  --color-bad: #f87171;
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Playfair Display', 'Times New Roman', serif;
+  --color-ink: #0a0907;
+  --color-panel: #110f0c;
+  --color-card: #17140f;
+  --color-line: #2b261d;
+  --color-muted: #a8a194;
+  --color-cream: #f4efe4;
+  --color-gold: #c9a45c;
+  --color-gold-strong: #e6c98a;
+  --color-gold-deep: #8f6f33;
+  --color-ok: #6fcf97;
+  --color-warn: #e8b85a;
+  --color-bad: #ef7d6e;
 }
 
 html {
-  background: #080808;
-  color: #fff;
+  background: var(--color-ink);
+  color: var(--color-cream);
   -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 body {
   margin: 0;
   min-width: 320px;
   font-family: var(--font-sans);
-  background: #080808;
+  background: var(--color-ink);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 :focus-visible {
   outline: 2px solid var(--color-gold);
   outline-offset: 2px;
 }
 ::selection {
-  background: rgb(185 164 119 / 0.35);
+  background: rgb(201 164 92 / 0.35);
 }
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
+
+/* ---------- Brand utilities ---------- */
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
+.text-gold-gradient {
+  background: linear-gradient(180deg, #f3dfae 0%, #d6b46f 45%, #a8823f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.bg-gold-gradient {
+  background: linear-gradient(135deg, #f0d79c 0%, #c9a45c 50%, #9c7a3c 100%);
+}
+.gold-hairline {
+  background: linear-gradient(90deg, transparent, rgb(201 164 92 / 0.7), transparent);
+  height: 1px;
+}
+/* Soft spotlight used behind heroes and section headers */
+.bg-spotlight {
+  background:
+    radial-gradient(60% 50% at 50% 0%, rgb(201 164 92 / 0.14), transparent 70%),
+    radial-gradient(40% 40% at 100% 100%, rgb(201 164 92 / 0.06), transparent 70%);
+}
+/* Subtle film grain over dark surfaces */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* Barber-pole stripe used as a decorative accent */
+.stripe-accent {
+  background: repeating-linear-gradient(135deg, rgb(201 164 92 / 0.9) 0 6px, transparent 6px 12px);
+}
+
+/* ---------- Motion ---------- */
 @keyframes sb-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
 .sb-pulse {
   animation: sb-pulse 1.6s ease-in-out infinite;
+}
+@keyframes sb-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+.rise {
+  animation: sb-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@keyframes sb-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee {
+  animation: sb-marquee 40s linear infinite;
+}
+@keyframes sb-scroll-cue {
+  0% { transform: translateY(0); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateY(10px); opacity: 0; }
+}
+.scroll-cue {
+  animation: sb-scroll-cue 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
 }

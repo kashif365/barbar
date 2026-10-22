@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { Banknote, Check, Play, Plus, RotateCcw, SkipForward, X } from 'lucide-react';
+import { Check, Play, Plus, RotateCcw, SkipForward, X } from 'lucide-react';
 import { Button, ConfirmDialog, EmptyState, ErrorState, LiveDot, PageHeader, Skeleton, inputCls } from '../../components/ui';
-import { PaymentDialog } from '../../components/PaymentDialog';
-import { VoidPaymentDialog } from '../../components/VoidPaymentDialog';
 import { TokenCard } from '../../components/TokenCard';
 import { WalkInForm } from '../../components/WalkInForm';
 import { useToast } from '../../context/ToastContext';
@@ -32,8 +30,6 @@ export default function QueueDesk() {
   const { busy, run } = useAction();
   const [walkIn, setWalkIn] = useState(false);
   const [pending, setPending] = useState<Pending | null>(null);
-  const [paying, setPaying] = useState<StaffToken | null>(null);
-  const [unpaying, setUnpaying] = useState<StaffToken | null>(null);
 
   const act = async (key: string, fn: () => Promise<unknown>, msg?: string) => {
     const r = await run(key, fn, msg);
@@ -70,7 +66,7 @@ export default function QueueDesk() {
       ) : data ? (
         <div className="space-y-8">
           <section aria-labelledby="h-serving">
-            <h2 id="h-serving" className="mb-3 font-semibold">In service ({data.inService.length})</h2>
+            <h2 id="h-serving" className="mb-4 font-display text-xl text-cream">In service ({data.inService.length})</h2>
             {data.inService.length ? (
               <ul className="grid gap-3 md:grid-cols-2">
                 {data.inService.map((t) => (
@@ -88,7 +84,7 @@ export default function QueueDesk() {
           </section>
 
           <section aria-labelledby="h-waiting">
-            <h2 id="h-waiting" className="mb-3 font-semibold">Waiting ({data.waiting.length})</h2>
+            <h2 id="h-waiting" className="mb-4 font-display text-xl text-cream">Waiting ({data.waiting.length})</h2>
             {data.waiting.length ? (
               <ul className="grid gap-3 md:grid-cols-2">
                 {data.waiting.map((t) => (
@@ -126,7 +122,7 @@ export default function QueueDesk() {
 
           {data.skipped.length > 0 && (
             <section aria-labelledby="h-skipped">
-              <h2 id="h-skipped" className="mb-3 font-semibold">Skipped today ({data.skipped.length})</h2>
+              <h2 id="h-skipped" className="mb-4 font-display text-xl text-cream">Skipped today ({data.skipped.length})</h2>
               <ul className="grid gap-3 md:grid-cols-2">
                 {data.skipped.map((t) => (
                   <TokenCard key={t.id} t={t} showWait={false} actions={
@@ -140,15 +136,11 @@ export default function QueueDesk() {
           )}
 
           <section aria-labelledby="h-done">
-            <h2 id="h-done" className="mb-3 font-semibold">Completed today ({data.completedToday})</h2>
+            <h2 id="h-done" className="mb-4 font-display text-xl text-cream">Completed today ({data.completedToday})</h2>
             {data.completed.length ? (
               <ul className="grid gap-3 md:grid-cols-2">
                 {data.completed.map((t) => (
-                  <TokenCard key={t.id} t={t} showWait={false} actions={!t.paid ? (
-                    <Button size="sm" variant="primary" onClick={() => setPaying(t)}><Banknote className="h-4 w-4" aria-hidden /> Record payment</Button>
-                  ) : isOwner ? (
-                    <Button size="sm" onClick={() => setUnpaying(t)}>Mark unpaid</Button>
-                  ) : null} />
+                  <TokenCard key={t.id} t={t} showWait={false} />
                 ))}
               </ul>
             ) : <EmptyState title="Nothing completed yet today." />}
@@ -162,8 +154,6 @@ export default function QueueDesk() {
           onCreated={(n) => { setWalkIn(false); toast.success(`Token ${n} created.`); void reload(true); }}
         />
       )}
-      {paying && <PaymentDialog token={paying} onClose={() => setPaying(null)} onDone={() => { setPaying(null); void reload(true); }} />}
-      {unpaying && <VoidPaymentDialog token={unpaying} onClose={() => setUnpaying(null)} onDone={() => { setUnpaying(null); void reload(true); }} />}
       <ConfirmDialog
         open={!!pending}
         title={pending ? COPY[pending.kind].title : ''}

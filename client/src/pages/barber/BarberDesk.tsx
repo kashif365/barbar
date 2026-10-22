@@ -69,7 +69,7 @@ export default function BarberDesk() {
           {notice && <Banner tone="info">{notice}</Banner>}
 
           <section aria-labelledby="h-current">
-            <h2 id="h-current" className="mb-3 font-semibold">Current customer</h2>
+            <h2 id="h-current" className="mb-4 font-display text-xl text-cream">Current customer</h2>
             {current ? (
               <ul>
                 <TokenCard t={current} highlight showWait={false} actions={
@@ -90,7 +90,7 @@ export default function BarberDesk() {
           </section>
 
           <section aria-labelledby="h-wait">
-            <h2 id="h-wait" className="mb-3 font-semibold">Waiting ({data.waiting.length})</h2>
+            <h2 id="h-wait" className="mb-4 font-display text-xl text-cream">Waiting ({data.waiting.length})</h2>
             {data.waiting.length ? (
               <ul className="grid gap-3 md:grid-cols-2">
                 {data.waiting.map((t, i) => (
@@ -109,7 +109,7 @@ export default function BarberDesk() {
           </section>
 
           <section aria-labelledby="h-hist">
-            <h2 id="h-hist" className="mb-3 font-semibold">Completed today</h2>
+            <h2 id="h-hist" className="mb-4 font-display text-xl text-cream">Completed today</h2>
             {data.history.length ? (
               <Card className="!p-0">
                 <ul className="divide-y divide-line">

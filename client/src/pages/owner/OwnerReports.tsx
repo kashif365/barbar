@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Download } from 'lucide-react';
-import { Banner, Button, Card, EmptyState, ErrorState, PageHeader, Skeleton, inputCls } from '../../components/ui';
+import { Banner, Button, Card, EmptyState, ErrorState, PageHeader, Skeleton, StatCard, cx, inputCls } from '../../components/ui';
 import { useFetch } from '../../hooks/useFetch';
 import { endpoints } from '../../services/api';
 import type { Report } from '../../types';
@@ -10,9 +10,30 @@ type Mode = 'daily' | 'monthly' | 'range';
 
 function exportCsv(mode: Mode, r: Report) {
   downloadCsv(`shehraz-${mode}-${r.from}${r.to !== r.from ? `_${r.to}` : ''}.csv`, [
-    ['Date', 'Tokens', 'Completed', 'Recorded revenue (PKR)'],
-    ...r.days.map((d) => [d.date, d.tokens, d.completed, d.revenue]),
+    ['Date', 'Tokens', 'Completed', 'Earnings (PKR)'],
+    ...r.days.map((d) => [d.date, d.tokens, d.completed, d.earnings]),
   ]);
+}
+
+/** Simple bar chart of earnings per day; hidden for single-day reports. */
+function EarningsChart({ days }: { days: Report['days'] }) {
+  const max = Math.max(1, ...days.map((d) => d.earnings));
+  return (
+    <Card>
+      <h2 className="mb-5 font-display text-xl text-cream">Earnings by day</h2>
+      <div className="flex h-44 items-end gap-1 overflow-x-auto pb-1" role="img" aria-label="Bar chart of earnings per day">
+        {days.map((d) => (
+          <div key={d.date} className="group flex min-w-[0.9rem] flex-1 flex-col items-center justify-end gap-1.5 self-stretch" title={`${d.date}: ${formatPKR(d.earnings)} · ${d.completed} done`}>
+            <div className="bg-gold-gradient w-full max-w-10 rounded-t-md opacity-80 transition-opacity group-hover:opacity-100" style={{ height: `${Math.max(2, (d.earnings / max) * 100)}%` }} />
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 flex justify-between text-[0.65rem] uppercase tracking-wider text-muted">
+        <span>{days[0]?.date}</span>
+        <span>{days[days.length - 1]?.date}</span>
+      </div>
+    </Card>
+  );
 }
 
 export default function OwnerReports() {
@@ -39,13 +60,20 @@ export default function OwnerReports() {
     <div>
       <PageHeader
         title="Reports"
-        subtitle="Revenue counts recorded payments only. Completed-but-unpaid services are shown separately."
+        subtitle="Earnings are the booked price of completed services. Customers pay their barber in person."
         actions={r && <Button onClick={() => exportCsv(mode, r)}><Download className="h-4 w-4" aria-hidden /> Export CSV</Button>}
       />
-      <div className="mb-5 flex flex-wrap items-end gap-3">
-        <div role="group" aria-label="Report period" className="inline-flex rounded-xl border border-line p-1">
+      <div className="mb-6 flex flex-wrap items-end gap-3">
+        <div role="group" aria-label="Report period" className="inline-flex rounded-full border border-line bg-panel p-1">
           {(['daily', 'monthly', 'range'] as Mode[]).map((m) => (
-            <button key={m} aria-pressed={mode === m} onClick={() => setMode(m)} className={`min-h-10 rounded-lg px-4 text-sm capitalize ${mode === m ? 'bg-gold text-ink' : 'text-muted hover:text-white'}`}>{m}</button>
+            <button
+              key={m}
+              aria-pressed={mode === m}
+              onClick={() => setMode(m)}
+              className={cx('min-h-10 rounded-full px-5 text-sm font-semibold capitalize transition', mode === m ? 'bg-gold-gradient text-ink' : 'text-muted hover:text-cream')}
+            >
+              {m}
+            </button>
           ))}
         </div>
         {mode === 'daily' ? (
@@ -64,47 +92,57 @@ export default function OwnerReports() {
         )}
       </div>
       {rangeError && <div className="mb-5"><Banner tone="warn">{rangeError}</Banner></div>}
-      <p className="mb-5 text-xs text-muted">Revenue is counted on the day a payment was received. A service paid later counts on the day it was paid, not the day it was booked.</p>
 
-      {rangeError ? null : loadingNow ? <div className="grid gap-3 sm:grid-cols-3"><Skeleton className="h-24" /><Skeleton className="h-24" /><Skeleton className="h-24" /></div>
+      {rangeError ? null : loadingNow ? <div className="grid gap-3 sm:grid-cols-4"><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /></div>
         : error && !r ? <ErrorState message={error.message} onRetry={() => void reload()} />
         : r ? (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Card className="!p-4"><p className="text-xs uppercase tracking-wider text-muted">Recorded revenue</p><p className="mt-1 text-2xl font-bold">{formatPKR(r.revenue.total)}</p><p className="text-xs text-muted">{r.revenue.paymentsCount} payment{r.revenue.paymentsCount === 1 ? '' : 's'}</p></Card>
-              <Card className="!p-4"><p className="text-xs uppercase tracking-wider text-muted">Tokens</p><p className="mt-1 text-2xl font-bold">{r.totalTokens}</p><p className="text-xs text-muted">{r.bySource.online} online · {r.bySource['walk-in']} walk-in</p></Card>
-              <Card className="!p-4"><p className="text-xs uppercase tracking-wider text-muted">Completed</p><p className="mt-1 text-2xl font-bold">{r.byStatus.completed}</p><p className="text-xs text-muted">{r.completedUnpaid} unpaid · {formatPKR(r.completedUnpaidAmount)}</p></Card>
-              <Card className="!p-4"><p className="text-xs uppercase tracking-wider text-muted">Cancelled / skipped</p><p className="mt-1 text-2xl font-bold">{r.byStatus.cancelled} / {r.byStatus.skipped}</p></Card>
+              <StatCard accent label="Earnings" value={formatPKR(r.earnings)} sub={`${r.byStatus.completed} completed service${r.byStatus.completed === 1 ? '' : 's'}`} />
+              <StatCard label="Tokens" value={r.totalTokens} sub={`${r.bySource.online} online · ${r.bySource['walk-in']} walk-in`} />
+              <StatCard label="Completed" value={r.byStatus.completed} sub={r.byStatus.completed ? `Avg ${formatPKR(Math.round(r.earnings / r.byStatus.completed))}` : undefined} />
+              <StatCard label="Cancelled / skipped" value={`${r.byStatus.cancelled} / ${r.byStatus.skipped}`} />
             </div>
 
-            {r.totalTokens === 0 && r.revenue.paymentsCount === 0 ? <EmptyState title="No activity in this period." /> : (
-              <div className="grid gap-4 lg:grid-cols-2">
-                <Card>
-                  <h2 className="mb-3 font-semibold">Status breakdown</h2>
-                  <ul className="divide-y divide-line text-sm">
-                    {(Object.keys(STATUS_LABEL) as (keyof typeof STATUS_LABEL)[]).map((s) => <li key={s} className="flex justify-between py-2"><span>{STATUS_LABEL[s]}</span><span className="text-muted">{r.byStatus[s]}</span></li>)}
-                  </ul>
-                </Card>
-                <Card>
-                  <h2 className="mb-3 font-semibold">Service popularity (completed)</h2>
-                  {r.popularServices.length ? <ul className="divide-y divide-line text-sm">{r.popularServices.map((s) => <li key={s.name} className="flex justify-between py-2"><span>{s.name}</span><span className="text-muted">{s.completed}</span></li>)}</ul> : <p className="text-sm text-muted">No completed services.</p>}
-                </Card>
-                <Card>
-                  <h2 className="mb-3 font-semibold">By barber (completed)</h2>
-                  {r.byBarber.length ? <ul className="divide-y divide-line text-sm">{r.byBarber.map((b) => <li key={b.barberId} className="flex justify-between py-2"><span>{b.name}</span><span className="text-muted">{b.completed}</span></li>)}</ul> : <p className="text-sm text-muted">No completed services.</p>}
-                </Card>
-                <Card className="!p-0">
-                  <h2 className="px-4 pt-4 font-semibold sm:px-5">By day</h2>
-                  <div className="overflow-x-auto p-2 sm:px-3">
-                    <table className="w-full min-w-[22rem] text-left text-sm">
-                      <thead className="text-xs uppercase tracking-wider text-muted"><tr><th className="p-2 font-medium">Date</th><th className="p-2 text-right font-medium">Tokens</th><th className="p-2 text-right font-medium">Done</th><th className="p-2 text-right font-medium">Revenue</th></tr></thead>
-                      <tbody className="divide-y divide-line">
-                        {r.days.map((d) => <tr key={d.date}><td className="p-2">{d.date}</td><td className="p-2 text-right">{d.tokens}</td><td className="p-2 text-right">{d.completed}</td><td className="p-2 text-right">{formatPKR(d.revenue)}</td></tr>)}
-                      </tbody>
-                    </table>
-                  </div>
-                </Card>
-              </div>
+            {r.totalTokens === 0 ? <EmptyState title="No activity in this period." /> : (
+              <>
+                {r.days.length > 1 && <EarningsChart days={r.days} />}
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <Card>
+                    <h2 className="mb-4 font-display text-xl text-cream">Services (completed)</h2>
+                    {r.popularServices.length ? (
+                      <ul className="divide-y divide-line text-sm">
+                        {r.popularServices.map((s) => <li key={s.name} className="flex justify-between gap-3 py-2.5"><span className="text-cream">{s.name}</span><span className="text-muted">{s.completed} · {formatPKR(s.earnings)}</span></li>)}
+                      </ul>
+                    ) : <p className="text-sm text-muted">No completed services.</p>}
+                  </Card>
+                  <Card>
+                    <h2 className="mb-4 font-display text-xl text-cream">By barber (completed)</h2>
+                    {r.byBarber.length ? (
+                      <ul className="divide-y divide-line text-sm">
+                        {r.byBarber.map((b) => <li key={b.barberId} className="flex justify-between gap-3 py-2.5"><span className="text-cream">{b.name}</span><span className="text-muted">{b.completed} · {formatPKR(b.earnings)}</span></li>)}
+                      </ul>
+                    ) : <p className="text-sm text-muted">No completed services.</p>}
+                  </Card>
+                  <Card>
+                    <h2 className="mb-4 font-display text-xl text-cream">Status breakdown</h2>
+                    <ul className="divide-y divide-line text-sm">
+                      {(Object.keys(STATUS_LABEL) as (keyof typeof STATUS_LABEL)[]).map((s) => <li key={s} className="flex justify-between py-2.5"><span className="text-cream">{STATUS_LABEL[s]}</span><span className="text-muted">{r.byStatus[s]}</span></li>)}
+                    </ul>
+                  </Card>
+                  <Card className="!p-0">
+                    <h2 className="px-4 pt-4 font-display text-xl text-cream sm:px-5 sm:pt-5">By day</h2>
+                    <div className="overflow-x-auto p-2 sm:px-3">
+                      <table className="w-full min-w-[22rem] text-left text-sm">
+                        <thead className="text-[0.65rem] uppercase tracking-[0.14em] text-muted"><tr><th className="p-2 font-bold">Date</th><th className="p-2 text-right font-bold">Tokens</th><th className="p-2 text-right font-bold">Done</th><th className="p-2 text-right font-bold">Earnings</th></tr></thead>
+                        <tbody className="divide-y divide-line">
+                          {r.days.map((d) => <tr key={d.date}><td className="p-2">{d.date}</td><td className="p-2 text-right">{d.tokens}</td><td className="p-2 text-right">{d.completed}</td><td className="p-2 text-right text-gold-strong">{formatPKR(d.earnings)}</td></tr>)}
+                        </tbody>
+                      </table>
+                    </div>
+                  </Card>
+                </div>
+              </>
             )}
           </div>
         ) : null}

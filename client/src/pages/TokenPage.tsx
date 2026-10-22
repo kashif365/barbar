@@ -38,7 +38,9 @@ export default function TokenPage() {
   };
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-8 sm:px-6 sm:py-12">
+    <div className="relative">
+    <div aria-hidden className="bg-spotlight pointer-events-none absolute inset-x-0 top-0 h-96" />
+    <div className="relative mx-auto max-w-xl px-4 py-10 sm:px-6 sm:py-14">
       {loading && !t ? (
         <div className="space-y-4">
           <Skeleton className="h-44" />
@@ -63,7 +65,7 @@ export default function TokenPage() {
             {t.canCancel && <Button variant="danger" onClick={() => setConfirm(true)} className="flex-1">Cancel token</Button>}
           </div>
           <p className="text-center text-xs text-muted">
-            Estimated wait is approximate and changes as the queue moves. <Link to="/queue" className="underline hover:text-white">See the full queue</Link>
+            Estimated wait is approximate and changes as the queue moves. <Link to="/queue" className="underline hover:text-cream">See the full queue</Link>
           </p>
         </div>
       ) : null}
@@ -78,6 +80,7 @@ export default function TokenPage() {
         onConfirm={() => void cancel()}
         onClose={() => setConfirm(false)}
       />
+    </div>
     </div>
   );
 }

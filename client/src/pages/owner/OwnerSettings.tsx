@@ -85,14 +85,14 @@ export default function OwnerSettings() {
           <form onSubmit={handleSubmit(onSubmit)} noValidate className="max-w-2xl space-y-5">
             {errors.root?.message && <Banner tone="bad">Settings were not saved. {errors.root.message}</Banner>}
             <Card className="space-y-4">
-              <h2 className="font-semibold">Salon details</h2>
+              <h2 className="font-display text-xl text-cream">Salon details</h2>
               <Field label="Salon name" htmlFor="salonName" error={errors.salonName?.message}><input id="salonName" className={inputCls} {...register('salonName')} /></Field>
               <Field label="Address" htmlFor="address" error={errors.address?.message}><input id="address" className={inputCls} {...register('address')} /></Field>
               <Field label="Phone" htmlFor="phone" error={errors.phone?.message}><input id="phone" type="tel" className={inputCls} {...register('phone')} /></Field>
               <Field label="Instagram URL" htmlFor="instagramUrl" error={errors.instagramUrl?.message}><input id="instagramUrl" inputMode="url" className={inputCls} {...register('instagramUrl')} /></Field>
             </Card>
             <Card className="space-y-4">
-              <h2 className="font-semibold">Opening hours (Asia/Karachi)</h2>
+              <h2 className="font-display text-xl text-cream">Opening hours (Asia/Karachi)</h2>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Opens" htmlFor="openTime" error={errors.openTime?.message}><input id="openTime" type="time" className={inputCls} {...register('openTime')} /></Field>
                 <Field label="Closes" htmlFor="closeTime" error={errors.closeTime?.message}><input id="closeTime" type="time" className={inputCls} {...register('closeTime')} /></Field>

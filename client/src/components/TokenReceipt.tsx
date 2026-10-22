@@ -16,7 +16,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   return (
     <div className="flex items-baseline justify-between gap-4 border-t border-line py-3 first:border-t-0">
       <dt className="shrink-0 text-sm text-muted">{label}</dt>
-      <dd className="min-w-0 break-words text-right text-sm font-semibold text-white">{children}</dd>
+      <dd className="min-w-0 break-words text-right text-sm font-semibold text-cream">{children}</dd>
     </div>
   );
 }
@@ -27,7 +27,7 @@ export function TokenReceipt({ t, connected }: { t: CustomerToken; connected: bo
   const hasQueue = q.position !== null || q.waitMinutes !== null;
 
   return (
-    <article aria-label={`Token receipt ${t.tokenNumber}`} className="relative overflow-hidden rounded-3xl border border-gold/50 bg-card shadow-[0_24px_60px_-24px_rgba(0,0,0,0.95),0_0_0_1px_rgba(185,164,119,0.08)]">
+    <article aria-label={`Token receipt ${t.tokenNumber}`} className="rise relative overflow-hidden rounded-[2rem] border border-gold/50 bg-gradient-to-b from-card to-panel shadow-[0_24px_60px_-24px_rgba(0,0,0,0.95),0_0_0_1px_rgba(185,164,119,0.08)]">
       <div aria-hidden className="h-1 bg-gradient-to-r from-transparent via-gold to-transparent" />
 
       <header className="flex items-center justify-between gap-3 px-5 pt-5 sm:px-7 sm:pt-6">
@@ -42,13 +42,13 @@ export function TokenReceipt({ t, connected }: { t: CustomerToken; connected: bo
       </header>
 
       <div className="px-5 pt-6 sm:px-7">
-        <h1 className="break-words text-xl font-bold sm:text-2xl">Hello, {firstName(t.customerName)}</h1>
+        <h1 className="break-words font-display text-2xl font-semibold text-cream sm:text-3xl">Hello, {firstName(t.customerName)}</h1>
         <p className="mt-1 text-sm text-muted">{GREETING[t.status]}</p>
 
         <div className="mt-5 rounded-2xl border border-gold/40 bg-ink px-4 py-5 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted">Your token</p>
           <p
-            className="mt-1 bg-gradient-to-b from-[#ecdfbd] to-gold bg-clip-text text-6xl font-extrabold tracking-tight text-transparent sm:text-7xl"
+            className="font-display text-gold-gradient mt-1 text-7xl font-semibold sm:text-8xl"
             aria-label={`Token ${t.tokenNumber}`}
           >
             {t.tokenNumber}

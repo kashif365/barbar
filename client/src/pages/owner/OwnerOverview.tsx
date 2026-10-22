@@ -1,69 +1,87 @@
-import { Card, ErrorState, LiveDot, PageHeader, Pill, Skeleton } from '../../components/ui';
+import { Link } from 'react-router-dom';
+import { ArrowRight, CheckCircle2, Hourglass, Scissors, Ticket, Wallet, XCircle } from 'lucide-react';
+import { Card, ErrorState, LiveDot, PageHeader, Pill, Skeleton, StatCard } from '../../components/ui';
 import { useFetch } from '../../hooks/useFetch';
 import { useLiveQueue } from '../../hooks/useLiveQueue';
 import { endpoints } from '../../services/api';
-import { AVAILABILITY_LABEL, formatPKR } from '../../utils/format';
+import { AVAILABILITY_LABEL, formatPKR, initialsOf } from '../../utils/format';
 
-function Stat({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
-  return (
-    <Card className="!p-4">
-      <p className="text-xs uppercase tracking-wider text-muted">{label}</p>
-      <p className="mt-1 text-2xl font-bold">{value}</p>
-      {sub && <p className="mt-0.5 text-xs text-muted">{sub}</p>}
-    </Card>
-  );
-}
+const I = 'h-4 w-4';
 
 export default function OwnerOverview() {
   const { data: d, error, loading, reload } = useFetch(() => endpoints.dashboard(), []);
   const connected = useLiveQueue(() => void reload(true));
+  const maxPopular = Math.max(1, ...(d?.popularServices.map((s) => s.completed) ?? [1]));
 
   return (
     <div>
-      <PageHeader title="Overview" subtitle={d ? `Business date ${d.businessDate}` : undefined} actions={<span className="self-center"><LiveDot connected={connected} /></span>} />
+      <PageHeader
+        title="Overview"
+        subtitle={d ? `Today · ${d.businessDate}` : undefined}
+        actions={<span className="self-center rounded-full border border-line bg-panel px-3 py-1.5"><LiveDot connected={connected} /></span>}
+      />
       {loading && !d ? (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="h-24" />)}</div>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="h-28" />)}</div>
       ) : error && !d ? (
         <ErrorState message={error.message} onRetry={() => void reload()} />
       ) : d ? (
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Stat label="Tokens today" value={d.totalTokens} sub={`${d.bySource.online} online · ${d.bySource['walk-in']} walk-in`} />
-            <Stat label="Waiting" value={d.waiting} />
-            <Stat label="In service" value={d.inService} />
-            <Stat label="Completed" value={d.completed} sub={d.completedUnpaid ? `${d.completedUnpaid} unpaid` : 'All paid'} />
-            <Stat label="Cancelled" value={d.cancelled} />
-            <Stat label="Skipped" value={d.skipped} />
-            <Stat label="Recorded revenue" value={formatPKR(d.revenue)} sub="From payment records" />
-          </div>
-
-          <section aria-labelledby="h-money">
-            <h2 id="h-money" className="mb-1 font-semibold">Payments &amp; revenue</h2>
-            <p className="mb-3 text-xs text-muted">Revenue is money actually received, counted on the day the payment was recorded. Completed-but-unpaid services are never included.</p>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Stat label="Received today" value={formatPKR(d.payments.receivedToday)} sub="Payments recorded today" />
-              <Stat label="Paid services" value={d.payments.paidServicesToday} sub="Payments received today" />
-              <Stat label="Completed, unpaid today" value={d.payments.completedTodayUnpaidCount} sub={`${formatPKR(d.payments.completedTodayUnpaidAmount)} not yet received`} />
-              <Stat label="Outstanding unpaid" value={formatPKR(d.payments.outstandingAmount)} sub={`${d.payments.outstandingCount} completed service${d.payments.outstandingCount === 1 ? '' : 's'}, all dates`} />
+            <div className="col-span-2">
+              <StatCard
+                accent
+                label="Earnings today"
+                value={formatPKR(d.earnings)}
+                sub={`${d.completed} service${d.completed === 1 ? '' : 's'} completed · paid to barbers in person`}
+                icon={<Wallet className="h-5 w-5" />}
+              />
             </div>
-          </section>
+            <StatCard label="Tokens today" value={d.totalTokens} sub={`${d.bySource.online} online · ${d.bySource['walk-in']} walk-in`} icon={<Ticket className={I} />} />
+            <StatCard label="Waiting" value={d.waiting} sub={`${d.inService} in the chair`} icon={<Hourglass className={I} />} />
+            <StatCard label="Completed" value={d.completed} icon={<CheckCircle2 className={I} />} />
+            <StatCard label="In service" value={d.inService} icon={<Scissors className={I} />} />
+            <StatCard label="Cancelled" value={d.cancelled} icon={<XCircle className={I} />} />
+            <StatCard label="Skipped" value={d.skipped} />
+          </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
-              <h2 className="mb-3 font-semibold">Popular services today</h2>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-display text-xl text-cream">Popular services today</h2>
+                <Link to="/owner/reports" className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.14em] text-gold hover:text-gold-strong">
+                  Reports <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                </Link>
+              </div>
               {d.popularServices.length ? (
-                <ul className="divide-y divide-line text-sm">
-                  {d.popularServices.map((s) => <li key={s.name} className="flex justify-between py-2"><span>{s.name}</span><span className="text-muted">{s.completed} completed</span></li>)}
+                <ul className="space-y-3.5 text-sm">
+                  {d.popularServices.map((s) => (
+                    <li key={s.name}>
+                      <div className="mb-1.5 flex justify-between"><span className="text-cream">{s.name}</span><span className="text-muted">{s.completed}</span></div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-line">
+                        <div className="bg-gold-gradient h-full rounded-full" style={{ width: `${(s.completed / maxPopular) * 100}%` }} />
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               ) : <p className="text-sm text-muted">No completed services yet today.</p>}
             </Card>
             <Card>
-              <h2 className="mb-3 font-semibold">Barbers</h2>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-display text-xl text-cream">Barbers</h2>
+                <Link to="/owner/team" className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.14em] text-gold hover:text-gold-strong">
+                  Manage <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                </Link>
+              </div>
               {d.barbers.length ? (
                 <ul className="divide-y divide-line text-sm">
                   {d.barbers.map((b) => (
-                    <li key={b.id} className="flex items-center justify-between gap-3 py-2">
-                      <span className="min-w-0 truncate">{b.name}</span>
+                    <li key={b.id} className="flex items-center justify-between gap-3 py-3">
+                      <span className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gold/30 bg-ink text-xs font-bold text-gold">
+                          {initialsOf(b.name)}
+                        </span>
+                        <span className="min-w-0 truncate text-cream">{b.name}</span>
+                      </span>
                       <span className="flex shrink-0 items-center gap-2">
                         <span className="text-xs text-muted">{b.completedToday} done</span>
                         {b.busy ? <Pill tone="gold">With customer</Pill> : <Pill tone={b.availability === 'available' ? 'ok' : 'neutral'}>{AVAILABILITY_LABEL[b.availability]}</Pill>}

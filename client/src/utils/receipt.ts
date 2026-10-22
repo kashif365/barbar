@@ -36,8 +36,8 @@ export const receiptFilename = (t: CustomerToken) => `shehraz-token-${t.tokenNum
 
 // ---------------------------------------------------------------- PNG rendering (canvas, no dependencies)
 
-const C = { ink: '#080808', card: '#171717', line: '#303030', muted: '#a3a3a3', gold: '#b9a477', goldStrong: '#cdbb92', white: '#ffffff' };
-const FONT = 'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const C = { ink: '#0a0907', card: '#17140f', line: '#2b261d', muted: '#a8a194', gold: '#c9a45c', goldStrong: '#e6c98a', white: '#f4efe4' };
+const FONT = 'Manrope, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
 function fit(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
   if (ctx.measureText(text).width <= maxWidth) return text;

@@ -90,12 +90,6 @@ export interface StaffToken {
   completedAt: string | null;
   position: number | null;
   estimatedWaitMinutes: number | null;
-  paid: boolean | null;
-  /** "paid" / "unpaid" for completed tokens; null otherwise. */
-  paymentStatus: 'paid' | 'unpaid' | null;
-  paidAt: string | null;
-  paidAmount: number | null;
-  paymentMethod: 'cash' | 'card' | 'mobile_wallet' | null;
   trackingToken: string;
 }
 
@@ -131,16 +125,8 @@ export interface Dashboard {
   completed: number;
   cancelled: number;
   skipped: number;
-  revenue: number;
-  completedUnpaid: number;
-  payments: {
-    receivedToday: number;
-    paidServicesToday: number;
-    completedTodayUnpaidCount: number;
-    completedTodayUnpaidAmount: number;
-    outstandingCount: number;
-    outstandingAmount: number;
-  };
+  /** Booked price of services completed today (customers pay the barber in person). */
+  earnings: number;
   currency: string;
   popularServices: { name: string; completed: number }[];
   bySource: Record<TokenSource, number>;
@@ -154,12 +140,10 @@ export interface Report {
   totalTokens: number;
   byStatus: Record<TokenStatus, number>;
   bySource: Record<TokenSource, number>;
-  popularServices: { name: string; completed: number }[];
-  byBarber: { barberId: string; name: string; completed: number }[];
-  revenue: { total: number; paymentsCount: number };
-  completedUnpaid: number;
-  completedUnpaidAmount: number;
-  days: { date: string; tokens: number; completed: number; revenue: number }[];
+  popularServices: { name: string; completed: number; earnings: number }[];
+  byBarber: { barberId: string; name: string; completed: number; earnings: number }[];
+  earnings: number;
+  days: { date: string; tokens: number; completed: number; earnings: number }[];
 }
 
 export interface TeamMember {

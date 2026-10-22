@@ -27,12 +27,6 @@ export const createTokenSchema = z.object({
 export const skipSchema = z.object({ reason: z.enum(['skipped', 'no_show']).default('skipped') });
 export const availabilitySchema = z.object({ availability: z.enum(['available', 'on_break', 'offline']) });
 export const reassignSchema = z.object({ barberId: objectId.nullable() });
-export const paymentSchema = z.object({
-  amount: z.number().min(0).max(1_000_000).optional(),
-  method: z.enum(['cash', 'card', 'mobile_wallet']).default('cash'),
-});
-
-export const voidPaymentSchema = z.object({ reason: z.string().trim().max(200).optional() });
 
 export const serviceCreateSchema = z.object({
   name: z.string().trim().min(1).max(80),

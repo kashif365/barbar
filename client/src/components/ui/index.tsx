@@ -13,12 +13,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'md' | 'lg' | 'sm';
 }
 const variants: Record<Variant, string> = {
-  primary: 'bg-gold text-ink hover:bg-gold-strong font-semibold',
-  secondary: 'border border-line bg-card text-white hover:border-gold/60',
-  ghost: 'text-muted hover:text-white hover:bg-white/5',
+  primary:
+    'bg-gold-gradient text-ink font-bold shadow-[0_10px_30px_-12px_rgba(201,164,92,0.7)] hover:brightness-110 hover:shadow-[0_14px_36px_-12px_rgba(201,164,92,0.85)]',
+  secondary: 'border border-line bg-card/80 text-cream hover:border-gold/60 hover:text-gold-strong',
+  ghost: 'text-muted hover:text-cream hover:bg-white/5',
   danger: 'border border-bad/40 bg-bad/10 text-bad hover:bg-bad/20',
 };
-const sizes = { sm: 'min-h-9 px-3 text-sm', md: 'min-h-11 px-4 text-sm', lg: 'min-h-12 px-6 text-base' };
+const sizes = { sm: 'min-h-9 px-3.5 text-sm', md: 'min-h-11 px-5 text-sm', lg: 'min-h-13 px-7 text-base' };
 
 export function Button({ variant = 'secondary', size = 'md', loading, disabled, className, children, ...rest }: ButtonProps) {
   return (
@@ -27,7 +28,7 @@ export function Button({ variant = 'secondary', size = 'md', loading, disabled, 
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cx(
-        'inline-flex items-center justify-center gap-2 rounded-xl transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-flex items-center justify-center gap-2 rounded-full font-semibold tracking-wide transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100',
         variants[variant],
         sizes[size],
         className,
@@ -41,27 +42,41 @@ export function Button({ variant = 'secondary', size = 'md', loading, disabled, 
 
 // ---------- Layout primitives ----------
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cx('rounded-2xl border border-line bg-card p-4 sm:p-5', className)}>{children}</div>;
+  return (
+    <div className={cx('rounded-2xl border border-line bg-gradient-to-b from-card to-panel p-4 shadow-[0_20px_50px_-30px_rgba(0,0,0,0.9)] sm:p-5', className)}>
+      {children}
+    </div>
+  );
 }
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-7 flex flex-col gap-3 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
+        <h1 className="font-display text-3xl font-semibold text-cream sm:text-4xl">{title}</h1>
+        {subtitle && <p className="mt-1.5 text-sm text-muted">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
   );
 }
 
-export function SectionTitle({ eyebrow, title, children }: { eyebrow?: string; title: string; children?: ReactNode }) {
+export function Eyebrow({ children, center }: { children: ReactNode; center?: boolean }) {
   return (
-    <div className="mb-8 max-w-2xl">
-      {eyebrow && <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold">{eyebrow}</p>}
-      <h2 className="text-2xl font-bold tracking-tight sm:text-4xl">{title}</h2>
-      {children && <p className="mt-3 text-muted">{children}</p>}
+    <p className={cx('mb-3 flex items-center gap-3 text-[0.7rem] font-bold uppercase tracking-[0.3em] text-gold', center && 'justify-center')}>
+      <span aria-hidden className="h-px w-8 bg-gold/60" />
+      {children}
+      {center && <span aria-hidden className="h-px w-8 bg-gold/60" />}
+    </p>
+  );
+}
+
+export function SectionTitle({ eyebrow, title, children, center }: { eyebrow?: string; title: ReactNode; children?: ReactNode; center?: boolean }) {
+  return (
+    <div className={cx('mb-10 max-w-2xl', center && 'mx-auto text-center')}>
+      {eyebrow && <Eyebrow center={center}>{eyebrow}</Eyebrow>}
+      <h2 className="font-display text-3xl font-semibold leading-tight text-cream sm:text-5xl">{title}</h2>
+      {children && <p className="mt-4 text-base leading-relaxed text-muted">{children}</p>}
     </div>
   );
 }
@@ -96,8 +111,8 @@ export function Skeleton({ className }: { className?: string }) {
 }
 export function EmptyState({ title, hint, action }: { title: string; hint?: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-line px-6 py-10 text-center">
-      <Inbox className="h-7 w-7 text-muted" aria-hidden />
+    <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-line bg-panel/40 px-6 py-10 text-center">
+      <Inbox className="h-7 w-7 text-gold/60" strokeWidth={1.5} aria-hidden />
       <p className="font-medium">{title}</p>
       {hint && <p className="max-w-sm text-sm text-muted">{hint}</p>}
       {action}
@@ -128,12 +143,12 @@ export function LiveDot({ connected }: { connected: boolean }) {
 
 // ---------- Forms ----------
 export const inputCls =
-  'w-full min-h-11 rounded-xl border border-line bg-panel px-3.5 text-base text-white placeholder:text-muted/70 focus:border-gold focus:outline-none sm:text-sm disabled:opacity-60';
+  'w-full min-h-11 rounded-xl border border-line bg-ink/60 px-3.5 text-base text-cream placeholder:text-muted/60 transition-colors focus:border-gold focus:bg-ink focus:outline-none focus:ring-2 focus:ring-gold/20 sm:text-sm disabled:opacity-60';
 
 export function Field({ label, error, hint, htmlFor, children }: { label: string; error?: string; hint?: string; htmlFor: string; children: ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="block text-sm font-medium">
+      <label htmlFor={htmlFor} className="block text-xs font-bold uppercase tracking-[0.14em] text-muted">
         {label}
       </label>
       {children}
@@ -177,18 +192,18 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div
         ref={panel}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className={cx('flex max-h-[92dvh] w-full flex-col rounded-t-2xl border border-line bg-card shadow-2xl shadow-black outline-none sm:rounded-2xl', wide ? 'sm:max-w-2xl' : 'sm:max-w-md')}
+        className={cx('rise flex max-h-[92dvh] w-full flex-col rounded-t-3xl border border-gold/25 bg-gradient-to-b from-card to-panel shadow-2xl shadow-black outline-none sm:rounded-3xl', wide ? 'sm:max-w-2xl' : 'sm:max-w-md')}
       >
         <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-4">
-          <h2 className="text-lg font-semibold">{title}</h2>
-          <button onClick={onClose} aria-label="Close dialog" className="-m-2 rounded-lg p-2 text-muted hover:text-white">
+          <h2 className="font-display text-xl font-semibold">{title}</h2>
+          <button onClick={onClose} aria-label="Close dialog" className="-m-2 rounded-full p-2 text-muted hover:bg-white/5 hover:text-cream">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -226,4 +241,23 @@ export function SourceLabel({ source }: { source: 'online' | 'walk-in' }) {
 }
 export function SourceBadge({ source }: { source: 'online' | 'walk-in' }) {
   return <Pill tone={source === 'online' ? 'gold' : 'neutral'}>{source === 'online' ? 'Online' : 'Walk-in'}</Pill>;
+}
+
+// ---------- Stats ----------
+export function StatCard({ label, value, sub, icon, accent }: { label: string; value: ReactNode; sub?: ReactNode; icon?: ReactNode; accent?: boolean }) {
+  return (
+    <div
+      className={cx(
+        'relative overflow-hidden rounded-2xl border p-4 sm:p-5',
+        accent ? 'border-gold/40 bg-gradient-to-br from-gold/15 via-card to-panel' : 'border-line bg-gradient-to-b from-card to-panel',
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-muted">{label}</p>
+        {icon && <span className="text-gold/70">{icon}</span>}
+      </div>
+      <p className={cx('mt-2 font-display text-3xl font-semibold sm:text-4xl', accent ? 'text-gold-gradient' : 'text-cream')}>{value}</p>
+      {sub && <p className="mt-1 text-xs text-muted">{sub}</p>}
+    </div>
+  );
 }

@@ -94,7 +94,7 @@ export function ReceiptActions({ t }: { t: CustomerToken }) {
         <textarea
           readOnly
           rows={9}
-          className="w-full rounded-xl border border-line bg-panel p-3 text-sm text-white"
+          className="w-full rounded-xl border border-line bg-panel p-3 text-sm text-cream"
           value={fallbackText ?? ''}
           onFocus={(e) => e.currentTarget.select()}
           aria-label="Token details"

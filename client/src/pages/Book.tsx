@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Check, ChevronLeft } from 'lucide-react';
-import { Banner, Button, Card, ErrorState, Field, Skeleton, cx, inputCls } from '../components/ui';
+import { Banner, Button, ErrorState, Eyebrow, Field, Skeleton, cx, inputCls } from '../components/ui';
 import { useToast } from '../context/ToastContext';
 import { useFetch } from '../hooks/useFetch';
 import { endpoints, toProblem } from '../services/api';
@@ -80,7 +80,7 @@ export default function Book() {
       navigate(`/token/${encodeURIComponent(r.token.trackingToken)}`, { replace: true });
     } catch (e) {
       const p = toProblem(e);
-      setFormError(p.code === 'UNKNOWN' || p.status >= 500 || p.status === 0 ? `We couldn’t create your token. ${p.status === 0 ? p.message : 'Please try again.'}` : p.message);
+      setFormError(p.code === 'UNKNOWN' || p.status >= 500 || p.status === 0 ? `We couldnâ€™t create your token. ${p.status === 0 ? p.message : 'Please try again.'}` : p.message);
       if (p.code === 'SERVICE_UNAVAILABLE') {
         setServiceId(null);
         setStep(0);
@@ -101,18 +101,27 @@ export default function Book() {
   const closed = s && (!s.isOpen || !s.onlineBookingEnabled);
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-10 sm:py-14">
-      <h1 className="text-3xl font-bold tracking-tight">Get your token</h1>
-      <p className="mt-1 text-sm text-muted">It takes under a minute. No account needed.</p>
+    <div className="relative">
+      <div aria-hidden className="bg-spotlight pointer-events-none absolute inset-x-0 top-0 h-96" />
+    <div className="relative mx-auto max-w-2xl px-4 py-12 sm:py-16">
+      <div className="rise text-center">
+        <Eyebrow center>Under a minute Â· No account</Eyebrow>
+        <h1 className="font-display text-4xl font-semibold text-cream sm:text-5xl">Get your <span className="text-gold-gradient italic">token</span></h1>
+      </div>
 
-      <ol className="my-6 flex items-center gap-2" aria-label="Progress">
+      <ol className="my-10 flex items-center gap-2" aria-label="Progress">
         {steps.map((label, i) => (
-          <li key={label} className="flex flex-1 items-center gap-2" aria-current={i === step ? 'step' : undefined}>
-            <span className={cx('flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold', i < step ? 'border-gold bg-gold text-ink' : i === step ? 'border-gold text-gold' : 'border-line text-muted')}>
+          <li key={label} className="flex flex-1 items-center gap-2 last:flex-none" aria-current={i === step ? 'step' : undefined}>
+            <span
+              className={cx(
+                'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-bold transition-all duration-300',
+                i < step ? 'bg-gold-gradient border-transparent text-ink' : i === step ? 'border-gold text-gold-strong shadow-[0_0_0_4px_rgba(201,164,92,0.15)]' : 'border-line text-muted',
+              )}
+            >
               {i < step ? <Check className="h-4 w-4" aria-label="completed" /> : i + 1}
             </span>
-            <span className={cx('hidden text-xs sm:block', i === step ? 'text-white' : 'text-muted')}>{label}</span>
-            {i < steps.length - 1 && <span className="h-px flex-1 bg-line" aria-hidden />}
+            <span className={cx('hidden text-xs font-bold uppercase tracking-[0.14em] sm:block', i === step ? 'text-cream' : 'text-muted')}>{label}</span>
+            {i < steps.length - 1 && <span className={cx('h-px flex-1 transition-colors', i < step ? 'bg-gold/70' : 'bg-line')} aria-hidden />}
           </li>
         ))}
       </ol>
@@ -124,17 +133,17 @@ export default function Book() {
       )}
       {formError && <div className="mb-5"><Banner tone="bad">{formError}</Banner></div>}
 
-      <Card>
+      <div key={current} className="rise rounded-[2rem] border border-gold/20 bg-gradient-to-b from-card to-panel p-5 shadow-[0_40px_80px_-40px_rgba(0,0,0,0.95)] sm:p-8">
         {current === 'Service' && (
           <div>
-            <h2 className="mb-4 font-semibold">Choose a service</h2>
+            <h2 className="mb-5 font-display text-2xl text-cream">Choose a service</h2>
             <div role="radiogroup" aria-label="Service" className="space-y-2.5">
               {services.data?.items.map((sv) => (
-                <label key={sv.id} className={cx('flex min-h-14 cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-gold', serviceId === sv.id ? 'border-gold bg-gold/5' : 'border-line hover:border-gold/50')}>
+                <label key={sv.id} className={cx('flex min-h-16 cursor-pointer items-center justify-between gap-3 rounded-2xl border px-5 py-4 transition-all focus-within:outline focus-within:outline-2 focus-within:outline-gold', serviceId === sv.id ? 'border-gold bg-gold/10 shadow-[0_0_0_1px_rgba(201,164,92,0.4)]' : 'border-line bg-ink/40 hover:border-gold/50')}>
                   <input type="radio" name="service" className="sr-only" checked={serviceId === sv.id} onChange={() => { setServiceId(sv.id); setBarberId(null); }} />
                   <span className="min-w-0">
-                    <span className="block font-medium">{sv.name}</span>
-                    <span className="block text-xs text-muted">~{sv.durationMinutes} min{sv.isDemoPrice ? ' · Demo price — confirm with salon' : ''}</span>
+                    <span className="block font-display text-lg text-cream">{sv.name}</span>
+                    <span className="block text-xs text-muted">~{sv.durationMinutes} min{sv.isDemoPrice ? ' Â· Demo price â€” confirm with salon' : ''}</span>
                   </span>
                   <span className="shrink-0 font-semibold text-gold-strong">{formatPKR(sv.price)}</span>
                 </label>
@@ -146,13 +155,13 @@ export default function Book() {
 
         {current === 'Barber' && (
           <div>
-            <h2 className="mb-4 font-semibold">Choose a barber</h2>
+            <h2 className="mb-5 font-display text-2xl text-cream">Choose a barber</h2>
             <div role="radiogroup" aria-label="Barber" className="space-y-2.5">
-              {[{ id: null as string | null, name: 'First available', sub: 'Fastest — served by whoever is free next' }, ...barberList.map((b) => ({ id: b.id as string | null, name: b.name, sub: b.availability === 'available' ? 'Available now' : 'Currently unavailable' }))].map((o) => (
-                <label key={o.id ?? 'any'} className={cx('flex min-h-14 cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 focus-within:outline focus-within:outline-2 focus-within:outline-gold', barberId === o.id ? 'border-gold bg-gold/5' : 'border-line hover:border-gold/50')}>
+              {[{ id: null as string | null, name: 'First available', sub: 'Fastest â€” served by whoever is free next' }, ...barberList.map((b) => ({ id: b.id as string | null, name: b.name, sub: b.availability === 'available' ? 'Available now' : 'Currently unavailable' }))].map((o) => (
+                <label key={o.id ?? 'any'} className={cx('flex min-h-16 cursor-pointer items-center justify-between gap-3 rounded-2xl border px-5 py-4 transition-all focus-within:outline focus-within:outline-2 focus-within:outline-gold', barberId === o.id ? 'border-gold bg-gold/10 shadow-[0_0_0_1px_rgba(201,164,92,0.4)]' : 'border-line bg-ink/40 hover:border-gold/50')}>
                   <input type="radio" name="barber" className="sr-only" checked={barberId === o.id} onChange={() => setBarberId(o.id)} />
                   <span>
-                    <span className="block font-medium">{o.name}</span>
+                    <span className="block font-display text-lg text-cream">{o.name}</span>
                     <span className="block text-xs text-muted">{o.sub}</span>
                   </span>
                 </label>
@@ -167,7 +176,7 @@ export default function Book() {
 
         {current === 'Your details' && (
           <form onSubmit={handleSubmit(onDetails)} noValidate className="space-y-4">
-            <h2 className="font-semibold">Your details</h2>
+            <h2 className="font-display text-2xl text-cream">Your details</h2>
             <Field label="Your name" htmlFor="customerName" error={errors.customerName?.message}>
               <input id="customerName" autoComplete="name" className={inputCls} aria-invalid={!!errors.customerName} aria-describedby={errors.customerName ? 'customerName-error' : undefined} {...register('customerName')} />
             </Field>
@@ -185,7 +194,7 @@ export default function Book() {
 
         {current === 'Review' && service && (
           <div>
-            <h2 className="mb-4 font-semibold">Review &amp; confirm</h2>
+            <h2 className="mb-5 font-display text-2xl text-cream">Review &amp; confirm</h2>
             <dl className="divide-y divide-line text-sm">
               <Row label="Service" value={service.name} />
               <Row label="Price" value={formatPKR(service.price)} strong />
@@ -193,11 +202,11 @@ export default function Book() {
               <Row label="Barber" value={barber ? barber.name : 'First available'} />
               <Row label="Name" value={getValues('customerName')} />
             </dl>
-            {service.isDemoPrice && <div className="mt-4"><Banner tone="warn">Demo price — please confirm with the salon.</Banner></div>}
+            {service.isDemoPrice && <div className="mt-4"><Banner tone="warn">Demo price â€” please confirm with the salon.</Banner></div>}
             <ul className="mt-4 space-y-1 text-xs text-muted">
-              <li>• Pay at the salon after your service.</li>
-              <li>• Your wait is an estimate and may change.</li>
-              <li>• Online and walk-in customers are served in the order they arrive.</li>
+              <li>â€¢ Pay your barber in person after your service.</li>
+              <li>â€¢ Your wait is an estimate and may change.</li>
+              <li>â€¢ Online and walk-in customers are served in the order they arrive.</li>
             </ul>
             <div className="mt-5 flex gap-2">
               <Button onClick={back} disabled={submitting} aria-label="Back"><ChevronLeft className="h-4 w-4" /></Button>
@@ -207,7 +216,8 @@ export default function Book() {
             </div>
           </div>
         )}
-      </Card>
+      </div>
+    </div>
     </div>
   );
 }
