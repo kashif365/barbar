@@ -8,6 +8,9 @@ Missing files are fine: the site shows a styled placeholder instead.
   gallery-1.jpg   Lookbook photos (square or portrait, ~1200 px). Use as many as you have, up to 6.
   ...
   gallery-6.jpg
+  reel-1.mp4      Short portrait clips (9:16, muted, under ~8 MB each) shown under the lookbook,
+  reel-1.jpg      each with a still frame of the same name. Add or remove them in media.ts.
+  ...
 
 Tips
 - Compress photos before uploading (e.g. squoosh.app, quality ~75). Aim for under 400 KB each.

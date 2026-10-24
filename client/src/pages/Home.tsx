@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight, Clock, MapPin, Phone, Radio, Scissors, Smartphone, Ticket } from 'lucide-react';
 import { BackdropMedia, MediaPlaceholder, Reveal, SmartImage, useImage } from '../components/Media';
@@ -124,7 +125,7 @@ export default function Home() {
       {/* ---------------- About ---------------- */}
       <section className="relative mx-auto grid max-w-7xl items-center gap-14 px-4 py-24 sm:px-6 lg:grid-cols-2 lg:py-32">
         <Reveal className="relative">
-          <SmartImage src={MEDIA.about} alt="Inside The Shehraz Barber" className="aspect-[4/5] rounded-[2rem] border border-line" placeholderLabel="The Shehraz Barber" />
+          <SmartImage src={MEDIA.about} alt="The Shehraz Barber team inside the shop" className="aspect-[4/5] rounded-[2rem] border border-line" placeholderLabel="The Shehraz Barber" />
           <div aria-hidden className="absolute -bottom-6 -right-2 hidden rounded-full border border-gold/40 bg-ink p-2 shadow-2xl sm:block lg:-right-8">
             <Logo size={120} />
           </div>
@@ -261,6 +262,40 @@ function GalleryTile({ src, caption, className, index }: { src: string; caption?
   );
 }
 
+/** Portrait clip that plays (muted, looping) only while it is on screen; poster-only until then. */
+function ReelCard({ src, poster, caption, index }: { src: string; poster: string; caption?: string; index: number }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const reduceMotion = typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || reduceMotion || !('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver(([e]) => (e.isIntersecting ? void v.play().catch(() => {}) : v.pause()), { threshold: 0.5 });
+    io.observe(v);
+    return () => io.disconnect();
+  }, [reduceMotion]);
+  return (
+    <Reveal delay={index * 90} className="group relative aspect-[9/16] w-[70%] shrink-0 snap-center overflow-hidden rounded-[1.5rem] border border-line bg-card sm:w-auto">
+      <video
+        ref={ref}
+        src={src}
+        poster={poster}
+        muted
+        loop
+        playsInline
+        preload="none"
+        controls={reduceMotion}
+        aria-label={caption ?? 'Video from The Shehraz Barber'}
+        className="h-full w-full object-cover"
+      />
+      {caption && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/90 to-transparent p-5 pt-14">
+          <p className="font-display text-xl italic text-cream">{caption}</p>
+        </div>
+      )}
+    </Reveal>
+  );
+}
+
 function Lookbook() {
   const g = MEDIA.gallery;
   // Bento layout on large screens: first tile is tall, fourth is wide.
@@ -276,6 +311,13 @@ function Lookbook() {
             <GalleryTile key={it.src} src={it.src} caption={it.caption} index={i} className={span[i]} />
           ))}
         </div>
+        {MEDIA.reels.length > 0 && (
+          <div className="-mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0">
+            {MEDIA.reels.map((r, i) => (
+              <ReelCard key={r.src} {...r} index={i} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

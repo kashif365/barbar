@@ -14,11 +14,17 @@ export const MEDIA = {
   ctaBackground: '/media/cta.jpg',
   /** Lookbook gallery on the home page. Captions are optional. */
   gallery: [
-    { src: '/media/gallery-1.jpg', caption: 'Skin fade' },
-    { src: '/media/gallery-2.jpg', caption: 'Classic cut' },
-    { src: '/media/gallery-3.jpg', caption: 'Beard sculpt' },
-    { src: '/media/gallery-4.jpg', caption: 'Hot towel shave' },
-    { src: '/media/gallery-5.jpg', caption: 'Textured crop' },
-    { src: '/media/gallery-6.jpg', caption: 'The shop' },
+    { src: '/media/gallery-1.jpg', caption: 'Scissor finish' },
+    { src: '/media/gallery-2.jpg', caption: 'Skin fade' },
+    { src: '/media/gallery-3.jpg', caption: 'Facial & head massage' },
+    { src: '/media/gallery-4.jpg', caption: 'Every chair, every day' },
+    { src: '/media/gallery-5.jpg', caption: 'Clipper detailing' },
+    { src: '/media/gallery-6.jpg', caption: 'The house tee' },
+  ],
+  /** Short portrait clips (9:16) shown under the lookbook. They play muted only while on screen. */
+  reels: [
+    { src: '/media/reel-1.mp4', poster: '/media/reel-1.jpg', caption: 'Fade, start to finish' },
+    { src: '/media/reel-2.mp4', poster: '/media/reel-2.jpg', caption: 'In the chair' },
+    { src: '/media/reel-3.mp4', poster: '/media/reel-3.jpg', caption: 'Scissor over comb' },
   ],
 } as const;
