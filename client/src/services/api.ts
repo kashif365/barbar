@@ -5,7 +5,7 @@ import type {
 } from '../types';
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: window.SB_CONFIG?.apiBaseUrl || import.meta.env.VITE_API_BASE_URL || '/api',
   withCredentials: true,
   timeout: 15000,
   // Custom header required by the server's CSRF guard on state-changing requests.

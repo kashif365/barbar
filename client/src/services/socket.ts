@@ -5,7 +5,7 @@ let socket: Socket | null = null;
 /** One shared connection. Reconnects automatically with backoff. */
 export function getSocket(): Socket {
   if (!socket) {
-    socket = io(import.meta.env.VITE_SOCKET_URL || undefined, {
+    socket = io(window.SB_CONFIG?.socketUrl || import.meta.env.VITE_SOCKET_URL || undefined, {
       withCredentials: true,
       reconnection: true,
       reconnectionDelay: 1000,
