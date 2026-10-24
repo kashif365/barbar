@@ -1,0 +1,13 @@
+{
+  "name": "shehraz-barber-api",
+  "private": true,
+  "description": "Bundled API. No dependencies to install.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node seed.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

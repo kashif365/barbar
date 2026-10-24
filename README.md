@@ -154,7 +154,35 @@ Backend: `NODE_ENV`, `PORT`, `MONGODB_URI`, `CLIENT_ORIGIN`, `SESSION_SECRET`, `
 Frontend (public values only): `VITE_API_BASE_URL`, `VITE_SOCKET_URL`.
 Never commit `.env` files (they are git-ignored).
 
-## Deployment
+## Deploying to cPanel (build locally, upload the result)
+Shared hosting usually can't run `npm run build`, so everything is built on your PC:
+
+```powershell
+npm run deploy:build      # in the project root; installs, type-checks and builds both parts
+```
+
+This creates `deploy/` (git-ignored):
+
+| Folder | What it is | Where it goes |
+|---|---|---|
+| `deploy/public_html/` | The website (HTML/CSS/JS, photos, videos, `.htaccess`, `config.js`) | The **contents** go into your domain's web root (usually `public_html`). Show hidden files so `.htaccess` is uploaded. |
+| `deploy/api/` | The whole server bundled into `server.js` (+ `seed.js`). **No `node_modules`, no `npm install` needed.** | A folder **outside** `public_html`, e.g. `/home/<user>/shehraz-api` |
+
+**Requirements on the host:** a Node.js 20+ runtime (cPanel *Setup Node.js App*), **HTTPS** (AutoSSL; login cookies are HTTPS-only in production), and a MongoDB database (MongoDB Atlas free tier; cPanel has no MongoDB).
+
+**Steps**
+1. **Database:** create a free MongoDB Atlas cluster and a database user. Under *Network Access* allow your host's IP (or `0.0.0.0/0`). Copy the `mongodb+srv://…` connection string.
+2. **API:** upload `deploy/api/` contents. In *Setup Node.js App*: Node 20+, application root = that folder, application URL = `api.yourdomain.com` (create the subdomain first), startup file `server.js`, mode Production. Create `.env` in that folder from `.env.example`: `NODE_ENV=production`, `MONGODB_URI=<Atlas string>`, `CLIENT_ORIGIN=https://yourdomain.com`, two new secrets, `COOKIE_SAMESITE=lax`, and `OWNER_NAME/OWNER_EMAIL/OWNER_PASSWORD`.
+3. **Seed once:** run the `seed` script (the app's *Run JS script* button, or `node seed.js` in the cPanel terminal). Then **delete `OWNER_PASSWORD`** from `.env` and restart the app. Check `https://api.yourdomain.com/api/health` shows `{"status":"ok","db":"up"}`.
+4. **Website:** upload `deploy/public_html/` contents, then edit `config.js` on the server:
+   `apiBaseUrl: 'https://api.yourdomain.com/api'`, `socketUrl: 'https://api.yourdomain.com'`. No rebuild needed.
+5. Open `https://yourdomain.com`, sign in at `/login`.
+
+**Updating later:** run `npm run deploy:build` again and re-upload. Website: replace everything except your edited `config.js`. API: replace `server.js`/`seed.js`, keep `.env`, restart the app.
+
+If the hosting has **no** Node.js option, the website can still live on cPanel but the API needs a Node host (e.g. Render) with the same `.env`. Point `config.js` at it and set `COOKIE_SAMESITE=none`.
+
+## Deployment (Render / Vercel)
 1. **MongoDB Atlas:** create a cluster, a database user, and allow your backend's IPs. Use the SRV URI as `MONGODB_URI`. Enable continuous/scheduled backups (Atlas Cloud Backup) and test a restore.
 2. **Backend (Render, Node web service):** root `server`, build `npm install && npm run build`, start `npm start`, health check `/api/health`. Set the env vars above with `NODE_ENV=production`. Run `npm run seed` once (Render shell, with `OWNER_*` set temporarily).
 3. **Frontend (Vercel):** root `client`, build `npm run build`, output `dist`. Set `VITE_API_BASE_URL` and `VITE_SOCKET_URL` to the backend.

@@ -1,0 +1,8 @@
+{
+  "name": "shehraz-barber",
+  "private": true,
+  "description": "Builds the client and the bundled server into deploy/ for upload to hosting.",
+  "scripts": {
+    "deploy:build": "node scripts/build-deploy.mjs"
+  }
+}
