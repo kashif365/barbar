@@ -154,31 +154,75 @@ Backend: `NODE_ENV`, `PORT`, `MONGODB_URI`, `CLIENT_ORIGIN`, `SESSION_SECRET`, `
 Frontend (public values only): `VITE_API_BASE_URL`, `VITE_SOCKET_URL`.
 Never commit `.env` files (they are git-ignored).
 
-## Deploying to cPanel (build locally, upload the result)
-Shared hosting usually can't run `npm run build`, so everything is built on your PC:
+## Deploying to cPanel (build locally, pull on the server)
+Shared hosting usually can't run `npm run build` (no `npm` on the SSH `PATH`, tight memory limits), so everything is built on your PC and the **result is committed**:
 
 ```powershell
-npm run deploy:build      # in the project root; installs, type-checks and builds both parts
+npm run deploy:build      # in the project root; installs, type-checks, builds and checks both parts
+git add deploy && git commit -m "Build for hosting" && git push
 ```
 
-This creates `deploy/` (git-ignored):
+### What is committed, what is not
 
-| Folder | What it is | Where it goes |
+| Path | In Git? | What it is |
 |---|---|---|
-| `deploy/public_html/` | The website (HTML/CSS/JS, photos, videos, `.htaccess`, `config.js`) | The **contents** go into your domain's web root (usually `public_html`). Show hidden files so `.htaccess` is uploaded. |
-| `deploy/api/` | The whole server bundled into `server.js` (+ `seed.js`). **No `node_modules`, no `npm install` needed.** | A folder **outside** `public_html`, e.g. `/home/<user>/shehraz-api` |
+| `deploy/public_html/` | **Yes** — the website artifact | Built HTML/CSS/JS, the 16 photos/videos, `.htaccess`, `config.example.js`, `version.json` |
+| `deploy/api/` | **Yes** — the API artifact | The whole server bundled into `server.js` (+ `seed.js`). No `node_modules`, no `npm install` on the host |
+| `client/dist/` | No (git-ignored) | Local Vite output; `deploy:build` copies it into `deploy/public_html` |
+| `config.js` (live) | No — lives only on the server | The API URLs. The build ships `config.example.js` instead, so a deploy can never overwrite it |
+| `.env` files | Never | Secrets. Only `.env.example` is committed |
 
-**Requirements on the host:** a Node.js 20+ runtime (cPanel *Setup Node.js App*), **HTTPS** (AutoSSL; login cookies are HTTPS-only in production), and a MongoDB database (MongoDB Atlas free tier; cPanel has no MongoDB).
+`deploy:build` always starts from an empty `client/dist` and fails if `index.html` points at a missing bundle, if `assets/` holds anything unreferenced, or if any file in `client/src/config/media.ts` is missing.
 
-**Steps**
-1. **Database:** create a free MongoDB Atlas cluster and a database user. Under *Network Access* allow your host's IP (or `0.0.0.0/0`). Copy the `mongodb+srv://…` connection string.
-2. **API:** upload `deploy/api/` contents. In *Setup Node.js App*: Node 20+, application root = that folder, application URL = `api.yourdomain.com` (create the subdomain first), startup file `server.js`, mode Production. Create `.env` in that folder from `.env.example`: `NODE_ENV=production`, `MONGODB_URI=<Atlas string>`, `CLIENT_ORIGIN=https://yourdomain.com`, two new secrets, `COOKIE_SAMESITE=lax`, and `OWNER_NAME/OWNER_EMAIL/OWNER_PASSWORD`.
-3. **Seed once:** run the `seed` script (the app's *Run JS script* button, or `node seed.js` in the cPanel terminal). Then **delete `OWNER_PASSWORD`** from `.env` and restart the app. Check `https://api.yourdomain.com/api/health` shows `{"status":"ok","db":"up"}`.
-4. **Website:** upload `deploy/public_html/` contents, then edit `config.js` on the server:
-   `apiBaseUrl: 'https://api.yourdomain.com/api'`, `socketUrl: 'https://api.yourdomain.com'`. No rebuild needed.
+### Updating the live website (SSH)
+The repository is cloned on the server (cPanel *Git Version Control*). Paths below use `~/repositories/barbar`; use your clone's path.
+
+```sh
+cd ~/repositories/barbar
+git status --short                 # must print nothing; never edit files in the clone
+git pull --ff-only origin main     # or "Update from Remote" in cPanel Git Version Control
+sh scripts/deploy-frontend.sh ~/shehraz-barbar.digitalmarketingshub.com/public_html
+curl -s https://shehraz-barbar.digitalmarketingshub.com/version.json   # shows the build that is live
+```
+
+`deploy-frontend.sh` needs no Node.js. It checks the build is complete, backs up the files it replaces to `~/backups/shehraz-frontend-<time>.tar.gz`, copies assets and media first and `index.html` last (so no visitor gets a page pointing at a missing bundle), removes only stale files inside `assets/`, and **keeps the live `config.js` and `.htaccess`** (on a first install it creates them; afterwards it only reports if the build's `.htaccess` differs). Nothing else in the web root is touched.
+
+**Rollback:** the deploy prints the exact command, e.g.
+
+```sh
+ls -1t ~/backups/shehraz-frontend-*.tar.gz | head -3
+sh ~/repositories/barbar/scripts/rollback-frontend.sh ~/backups/shehraz-frontend-YYYYMMDD-HHMMSS.tar.gz ~/shehraz-barbar.digitalmarketingshub.com/public_html
+```
+
+Backups include the photos and videos (~22 MB each); delete old ones from `~/backups` now and then.
+
+**Live `config.js`** (in the web root, edit on the server; no rebuild needed):
+
+```js
+window.SB_CONFIG = {
+  apiBaseUrl: 'https://api.shehraz-barbar.digitalmarketingshub.com/api',
+  socketUrl: 'https://api.shehraz-barbar.digitalmarketingshub.com',
+};
+```
+
+If `apiBaseUrl` points at the website instead of the API, the site's catch-all rewrite answers every API call with `index.html`. The app now shows an error message instead of a blank page and logs `Check apiBaseUrl in /config.js` in the browser console.
+
+### Updating the API
+Only needed when `deploy/api/` changed in the pull (`git diff --stat HEAD@{1} -- deploy/api`). Copy `server.js`/`seed.js` into the Node.js app folder, keep its `.env`, then restart the app in *Setup Node.js App* (or `touch tmp/restart.txt` in the app folder). Check `https://api.<domain>/api/health` shows `{"status":"ok","db":"up"}`.
+
+### Real-time updates (Socket.IO) on cPanel
+The site connects with a **WebSocket first** and falls back to HTTP long-polling only if the WebSocket cannot be opened; screens also refetch every 30 s and on reconnect, so they never stay stale.
+
+Long-polling keeps a session in the memory of the one Node process that created it. cPanel runs Node apps through Passenger, which can restart an idle app or start a second process. A polling request that lands on a process that doesn't know the session gets **`400 Session ID unknown`** and the client reconnects. WebSocket-first avoids this, because a WebSocket is a single connection. If you ever have to use polling (`socketTransports: ['polling']` in `config.js`, only for hosts that block WebSocket upgrades), ask the host to keep the API app at **one process** or to enable **Passenger sticky sessions** (`PassengerStickySessions on`). Otherwise those 400s will come back under load.
+
+### First install
+**Requirements:** Node.js 20+ (cPanel *Setup Node.js App*), **HTTPS** (AutoSSL; login cookies are HTTPS-only in production), and a MongoDB database (MongoDB Atlas; cPanel has no MongoDB).
+
+1. **Database:** create a MongoDB Atlas cluster and a database user. Under *Network Access* allow your host's IP. Copy the `mongodb+srv://…` connection string.
+2. **API:** copy `deploy/api/` into a folder **outside** `public_html`. In *Setup Node.js App*: Node 20+, application root = that folder, application URL = `api.yourdomain.com` (create the subdomain first), startup file `server.js`, mode Production. Create `.env` there from `.env.example`: `NODE_ENV=production`, `MONGODB_URI=<Atlas string>`, `CLIENT_ORIGIN=https://yourdomain.com`, two new secrets, `COOKIE_SAMESITE=lax`, and `OWNER_NAME/OWNER_EMAIL/OWNER_PASSWORD`.
+3. **Seed once:** run the `seed` script (the app's *Run JS script* button, or `node seed.js`). Then **delete `OWNER_PASSWORD`** from `.env` and restart the app.
+4. **Website:** run `scripts/deploy-frontend.sh` as above, then set the API URLs in the new `config.js`.
 5. Open `https://yourdomain.com`, sign in at `/login`.
-
-**Updating later:** run `npm run deploy:build` again and re-upload. Website: replace everything except your edited `config.js`. API: replace `server.js`/`seed.js`, keep `.env`, restart the app.
 
 If the hosting has **no** Node.js option, the website can still live on cPanel but the API needs a Node host (e.g. Render) with the same `.env`. Point `config.js` at it and set `COOKIE_SAMESITE=none`.
 

@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight, Clock, MapPin, Phone, Radio, Scissors, Smartphone, Ticket } from 'lucide-react';
-import { BackdropMedia, MediaPlaceholder, Reveal, SmartImage, useImage } from '../components/Media';
+import { BackdropMedia, InViewVideo, MediaImage, Reveal, SmartImage } from '../components/Media';
 import { Logo } from '../components/Logo';
 import { ErrorState, Eyebrow, SectionTitle, Skeleton, cx } from '../components/ui';
 import { MEDIA } from '../config/media';
@@ -245,14 +245,9 @@ export default function Home() {
 }
 
 function GalleryTile({ src, caption, className, index }: { src: string; caption?: string; className?: string; index: number }) {
-  const state = useImage(src);
   return (
     <Reveal delay={(index % 3) * 90} className={cx('group relative overflow-hidden rounded-[1.5rem] border border-line', className)}>
-      {state === 'ok' ? (
-        <img src={src} alt={caption ?? 'Work by The Shehraz Barber'} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-      ) : (
-        <MediaPlaceholder className="h-full w-full" />
-      )}
+      <MediaImage src={src} alt={caption ?? 'Work by The Shehraz Barber'} className="transition-transform duration-700 group-hover:scale-105" />
       {caption && (
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/90 to-transparent p-5 pt-14">
           <p className="font-display text-xl italic text-cream">{caption}</p>
@@ -264,29 +259,9 @@ function GalleryTile({ src, caption, className, index }: { src: string; caption?
 
 /** Portrait clip that plays (muted, looping) only while it is on screen; poster-only until then. */
 function ReelCard({ src, poster, caption, index }: { src: string; poster: string; caption?: string; index: number }) {
-  const ref = useRef<HTMLVideoElement>(null);
-  const reduceMotion = typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  useEffect(() => {
-    const v = ref.current;
-    if (!v || reduceMotion || !('IntersectionObserver' in window)) return;
-    const io = new IntersectionObserver(([e]) => (e.isIntersecting ? void v.play().catch(() => {}) : v.pause()), { threshold: 0.5 });
-    io.observe(v);
-    return () => io.disconnect();
-  }, [reduceMotion]);
   return (
     <Reveal delay={index * 90} className="group relative aspect-[9/16] w-[70%] shrink-0 snap-center overflow-hidden rounded-[1.5rem] border border-line bg-card sm:w-auto">
-      <video
-        ref={ref}
-        src={src}
-        poster={poster}
-        muted
-        loop
-        playsInline
-        preload="none"
-        controls={reduceMotion}
-        aria-label={caption ?? 'Video from The Shehraz Barber'}
-        className="h-full w-full object-cover"
-      />
+      <InViewVideo src={src} poster={poster} label={caption ?? 'Video from The Shehraz Barber'} className="h-full w-full object-cover" />
       {caption && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/90 to-transparent p-5 pt-14">
           <p className="font-display text-xl italic text-cream">{caption}</p>
@@ -324,13 +299,12 @@ function Lookbook() {
 }
 
 function CtaBand() {
-  const bg = useImage(MEDIA.ctaBackground);
+  const [bgFailed, setBgFailed] = useState(false);
   return (
     <section className="grain relative overflow-hidden">
-      {bg === 'ok' ? (
-        <img src={MEDIA.ctaBackground} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
-      ) : (
-        <div aria-hidden className="absolute inset-0 bg-[radial-gradient(60%_80%_at_50%_100%,#3a2d17_0%,#0a0907_70%)]" />
+      <div aria-hidden className="absolute inset-0 bg-[radial-gradient(60%_80%_at_50%_100%,#3a2d17_0%,#0a0907_70%)]" />
+      {!bgFailed && (
+        <img src={MEDIA.ctaBackground} alt="" aria-hidden loading="lazy" decoding="async" onError={() => setBgFailed(true)} className="absolute inset-0 h-full w-full object-cover" />
       )}
       <div aria-hidden className="absolute inset-0 bg-ink/75" />
       <Reveal className="relative mx-auto max-w-3xl px-4 py-28 text-center sm:px-6">

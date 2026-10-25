@@ -5,3 +5,6 @@ node_modules
 *.log
 .DS_Store
 coverage
+
+# Local Vite output. The committed deployment artifact is deploy/ (built by `npm run deploy:build`).
+client/dist/

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { ArrowUpRight, Clock, Instagram, MapPin, Menu, Phone, X } from 'lucide-react';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { Logo } from '../components/Logo';
 import { useFetch } from '../hooks/useFetch';
 import { endpoints } from '../services/api';
@@ -104,7 +105,9 @@ export default function PublicLayout() {
       </header>
 
       <main id="main" className={cx('flex-1', pathname !== '/' && 'pt-16')}>
-        <Outlet />
+        <ErrorBoundary resetKey={pathname}>
+          <Outlet />
+        </ErrorBoundary>
       </main>
 
       <footer className="relative overflow-hidden border-t border-line bg-panel">

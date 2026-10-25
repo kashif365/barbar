@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { BarChart3, ClipboardList, Menu, Radio, LogOut, Scissors, ScrollText, Settings, Tags, Users, X, LayoutDashboard, Globe } from 'lucide-react';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { Logo } from '../components/Logo';
 import { cx } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
@@ -32,6 +33,7 @@ const ROLE_LABEL: Record<string, string> = { owner: 'Owner', admin: 'Owner', bar
 export default function DashboardLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   if (!user) return null;
   const items = NAV[user.role] ?? NAV.owner ?? [];
@@ -136,7 +138,9 @@ export default function DashboardLayout() {
         <main className="relative mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
           <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(50%_100%_at_30%_0%,rgb(201_164_92/0.09),transparent_100%)]" />
           <div className="relative">
-            <Outlet />
+            <ErrorBoundary resetKey={pathname}>
+              <Outlet />
+            </ErrorBoundary>
           </div>
         </main>
       </div>
