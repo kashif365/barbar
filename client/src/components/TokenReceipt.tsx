@@ -1,3 +1,5 @@
+import { Users } from 'lucide-react';
+import { BarberAvatar } from './BarberAvatar';
 import { LiveDot, StatusBadge } from './ui';
 import { Logo } from './Logo';
 import type { CustomerToken } from '../types';
@@ -11,6 +13,27 @@ const GREETING: Record<CustomerToken['status'], string> = {
   skipped: 'You were skipped because you were not present when called.',
   cancelled: 'This token was cancelled.',
 };
+
+/** Who will cut (or cut) this customer's hair. */
+function BarberPanel({ t }: { t: CustomerToken }) {
+  const b = t.barber ?? null;
+  if (!b && t.status !== 'waiting') return null;
+  const label = !b ? 'Your barber' : t.status === 'in_service' ? 'Now with' : t.status === 'completed' ? 'Served by' : 'Your barber';
+  return (
+    <div className="mt-4 flex items-center gap-4 rounded-2xl border border-gold/30 bg-ink px-4 py-3" data-testid="token-barber">
+      {b ? (
+        <BarberAvatar name={b.name} photoUrl={b.photoUrl} className="h-16 w-16 text-xl" />
+      ) : (
+        <span aria-hidden className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-gold/50 bg-card text-gold"><Users className="h-7 w-7" strokeWidth={1.5} /></span>
+      )}
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">{label}</p>
+        <p className="truncate font-display text-xl text-cream">{b ? b.name : 'First available barber'}</p>
+        {!b && <p className="text-xs text-muted">You will see your barber here when you are called.</p>}
+      </div>
+    </div>
+  );
+}
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -55,6 +78,7 @@ export function TokenReceipt({ t, connected }: { t: CustomerToken; connected: bo
           </p>
           <div className="mt-3 flex justify-center"><StatusBadge status={t.status} /></div>
         </div>
+        <BarberPanel t={t} />
       </div>
 
       {/* ticket perforation */}

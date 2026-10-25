@@ -43,6 +43,7 @@ export const listBarbers = asyncHandler(async (_req, res) => {
     items: barbers.map((b) => ({
       id: String(b._id),
       name: b.name,
+      photoUrl: b.photoUrl ?? null,
       availability: b.barber?.availability ?? 'offline',
       serviceIds: (b.barber?.serviceIds ?? []).map(String),
     })),

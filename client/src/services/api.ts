@@ -159,9 +159,9 @@ export const endpoints = {
   createService: (b: Omit<AdminService, 'id' | 'currency'>) => data<{ service: AdminService }>(api.post('/owner/services', b)),
   updateService: (id: string, b: Partial<Omit<AdminService, 'id' | 'currency'>>) => data<{ service: AdminService }>(api.patch(`/owner/services/${id}`, b)),
   team: () => data<{ items: TeamMember[] }>(api.get('/owner/barbers'), { items: 'array', 'items[].serviceIds': 'array' }),
-  createMember: (b: { name: string; email: string; password: string; role: 'barber' | 'staff'; serviceIds: string[] }) =>
+  createMember: (b: { name: string; email: string; password: string; role: 'barber' | 'staff'; serviceIds: string[]; photoUrl?: string | null }) =>
     data<{ barber: TeamMember }>(api.post('/owner/barbers', b)),
-  updateMember: (id: string, b: Partial<{ name: string; isActive: boolean; availability: string; serviceIds: string[]; password: string }>) =>
+  updateMember: (id: string, b: Partial<{ name: string; isActive: boolean; availability: string; serviceIds: string[]; password: string; photoUrl: string | null }>) =>
     data<{ barber: TeamMember }>(api.patch(`/owner/barbers/${id}`, b)),
   reassign: (id: string, barberId: string | null) => data<{ token: StaffToken }>(api.patch(`/owner/tokens/${id}/reassign`, { barberId })),
   ownerSettings: () => data<{ settings: OwnerSettings }>(api.get('/owner/settings'), { settings: 'object' }),

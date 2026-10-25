@@ -35,6 +35,8 @@ export interface PublicSettings {
 export interface BarberPublic {
   id: string;
   name: string;
+  /** Older API versions omit it. */
+  photoUrl?: string | null;
   availability: Availability;
   serviceIds: string[];
 }
@@ -57,6 +59,8 @@ export interface CustomerToken {
   estimatedWaitMinutes: number | null;
   estimateAvailable: boolean | null;
   nowServing: string[];
+  /** The barber chosen (while waiting) or serving; null = first available. Older API versions omit it. */
+  barber?: { name: string; photoUrl: string | null } | null;
   canCancel: boolean;
 }
 
@@ -152,6 +156,7 @@ export interface TeamMember {
   email: string;
   role: 'barber' | 'staff';
   isActive: boolean;
+  photoUrl?: string | null;
   availability: Availability;
   serviceIds: string[];
   completedToday: number;

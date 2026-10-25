@@ -3,7 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Check, ChevronLeft } from 'lucide-react';
+import { Check, ChevronLeft, Users } from 'lucide-react';
+import { BarberAvatar } from '../components/BarberAvatar';
 import { Banner, Button, ErrorState, Eyebrow, Field, Skeleton, cx, inputCls } from '../components/ui';
 import { useToast } from '../context/ToastContext';
 import { useFetch } from '../hooks/useFetch';
@@ -80,7 +81,7 @@ export default function Book() {
       navigate(`/token/${encodeURIComponent(r.token.trackingToken)}`, { replace: true });
     } catch (e) {
       const p = toProblem(e);
-      setFormError(p.code === 'UNKNOWN' || p.status >= 500 || p.status === 0 ? `We couldnâ€™t create your token. ${p.status === 0 ? p.message : 'Please try again.'}` : p.message);
+      setFormError(p.code === 'UNKNOWN' || p.status >= 500 || p.status === 0 ? `We couldn’t create your token. ${p.status === 0 ? p.message : 'Please try again.'}` : p.message);
       if (p.code === 'SERVICE_UNAVAILABLE') {
         setServiceId(null);
         setStep(0);
@@ -105,7 +106,7 @@ export default function Book() {
       <div aria-hidden className="bg-spotlight pointer-events-none absolute inset-x-0 top-0 h-96" />
     <div className="relative mx-auto max-w-2xl px-4 py-12 sm:py-16">
       <div className="rise text-center">
-        <Eyebrow center>Under a minute Â· No account</Eyebrow>
+        <Eyebrow center>Under a minute · No account</Eyebrow>
         <h1 className="font-display text-4xl font-semibold text-cream sm:text-5xl">Get your <span className="text-gold-gradient italic">token</span></h1>
       </div>
 
@@ -143,7 +144,7 @@ export default function Book() {
                   <input type="radio" name="service" className="sr-only" checked={serviceId === sv.id} onChange={() => { setServiceId(sv.id); setBarberId(null); }} />
                   <span className="min-w-0">
                     <span className="block font-display text-lg text-cream">{sv.name}</span>
-                    <span className="block text-xs text-muted">~{sv.durationMinutes} min{sv.isDemoPrice ? ' Â· Demo price â€” confirm with salon' : ''}</span>
+                    <span className="block text-xs text-muted">~{sv.durationMinutes} min{sv.isDemoPrice ? ' · Demo price — confirm with salon' : ''}</span>
                   </span>
                   <span className="shrink-0 font-semibold text-gold-strong">{formatPKR(sv.price)}</span>
                 </label>
@@ -157,9 +158,17 @@ export default function Book() {
           <div>
             <h2 className="mb-5 font-display text-2xl text-cream">Choose a barber</h2>
             <div role="radiogroup" aria-label="Barber" className="space-y-2.5">
-              {[{ id: null as string | null, name: 'First available', sub: 'Fastest â€” served by whoever is free next' }, ...barberList.map((b) => ({ id: b.id as string | null, name: b.name, sub: b.availability === 'available' ? 'Available now' : 'Currently unavailable' }))].map((o) => (
-                <label key={o.id ?? 'any'} className={cx('flex min-h-16 cursor-pointer items-center justify-between gap-3 rounded-2xl border px-5 py-4 transition-all focus-within:outline focus-within:outline-2 focus-within:outline-gold', barberId === o.id ? 'border-gold bg-gold/10 shadow-[0_0_0_1px_rgba(201,164,92,0.4)]' : 'border-line bg-ink/40 hover:border-gold/50')}>
+              {[
+                { id: null as string | null, name: 'First available', sub: 'Fastest — served by whoever is free next', photoUrl: undefined as string | null | undefined },
+                ...barberList.map((b) => ({ id: b.id as string | null, name: b.name, sub: b.availability === 'available' ? 'Available now' : 'Currently unavailable', photoUrl: b.photoUrl })),
+              ].map((o) => (
+                <label key={o.id ?? 'any'} className={cx('flex min-h-16 cursor-pointer items-center gap-4 rounded-2xl border px-4 py-3 transition-all focus-within:outline focus-within:outline-2 focus-within:outline-gold', barberId === o.id ? 'border-gold bg-gold/10 shadow-[0_0_0_1px_rgba(201,164,92,0.4)]' : 'border-line bg-ink/40 hover:border-gold/50')}>
                   <input type="radio" name="barber" className="sr-only" checked={barberId === o.id} onChange={() => setBarberId(o.id)} />
+                  {o.id ? (
+                    <BarberAvatar name={o.name} photoUrl={o.photoUrl} className="h-14 w-14 text-lg" />
+                  ) : (
+                    <span aria-hidden className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-gold/50 bg-card text-gold"><Users className="h-6 w-6" strokeWidth={1.5} /></span>
+                  )}
                   <span>
                     <span className="block font-display text-lg text-cream">{o.name}</span>
                     <span className="block text-xs text-muted">{o.sub}</span>
@@ -202,11 +211,11 @@ export default function Book() {
               <Row label="Barber" value={barber ? barber.name : 'First available'} />
               <Row label="Name" value={getValues('customerName')} />
             </dl>
-            {service.isDemoPrice && <div className="mt-4"><Banner tone="warn">Demo price â€” please confirm with the salon.</Banner></div>}
+            {service.isDemoPrice && <div className="mt-4"><Banner tone="warn">Demo price — please confirm with the salon.</Banner></div>}
             <ul className="mt-4 space-y-1 text-xs text-muted">
-              <li>â€¢ Pay your barber in person after your service.</li>
-              <li>â€¢ Your wait is an estimate and may change.</li>
-              <li>â€¢ Online and walk-in customers are served in the order they arrive.</li>
+              <li>• Pay your barber in person after your service.</li>
+              <li>• Your wait is an estimate and may change.</li>
+              <li>• Online and walk-in customers are served in the order they arrive.</li>
             </ul>
             <div className="mt-5 flex gap-2">
               <Button onClick={back} disabled={submitting} aria-label="Back"><ChevronLeft className="h-4 w-4" /></Button>

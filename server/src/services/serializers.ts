@@ -4,9 +4,12 @@ import { makeTrackingToken } from '../utils/tracking';
 
 /**
  * Customer-facing view of THEIR OWN token. Never includes phone numbers or internal ids.
+ * `barber` is the barber the customer chose (while waiting) or the one serving them; null means
+ * "first available" (assigned when they are called).
  */
 export function toCustomerToken(t: TokenLean, snap: QueueSnapshot) {
   const waiting = t.status === 'waiting';
+  const b = t.barberId ? snap.barbers.find((x) => String(x._id) === String(t.barberId)) : null;
   const est = waiting ? snap.estimates.byToken.get(String(t._id)) ?? null : null;
   return {
     trackingToken: makeTrackingToken(t._id),
@@ -26,6 +29,7 @@ export function toCustomerToken(t: TokenLean, snap: QueueSnapshot) {
     estimatedWaitMinutes: est,
     estimateAvailable: waiting ? est !== null : null,
     nowServing: snap.inService.map((s) => s.tokenNumber),
+    barber: b ? { name: b.name, photoUrl: b.photoUrl ?? null } : null,
     canCancel: waiting,
   };
 }

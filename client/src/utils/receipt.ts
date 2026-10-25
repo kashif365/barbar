@@ -22,6 +22,7 @@ export function buildShareText(t: CustomerToken, url: string): string {
     `${BRAND} · Token ${t.tokenNumber}`,
     `Name: ${t.customerName}`,
     `Service: ${t.serviceName}`,
+    `Barber: ${barberLabel(t)}`,
     `Price: ${formatPKR(t.priceAtBooking)}`,
     `Booked: ${formatDateTimeLong(t.createdAt)}`,
     `Status: ${STATUS_LABEL[t.status]}`,
@@ -30,6 +31,9 @@ export function buildShareText(t: CustomerToken, url: string): string {
     `Track your token: ${url}`,
   ].join('\n');
 }
+
+/** The barber line on the receipt: their name, or "First available" until one is assigned. */
+export const barberLabel = (t: CustomerToken) => t.barber?.name ?? 'First available';
 
 export const whatsappUrl = (text: string) => `https://wa.me/?text=${encodeURIComponent(text)}`;
 export const receiptFilename = (t: CustomerToken) => `shehraz-token-${t.tokenNumber.replace(/[^A-Za-z0-9-]/g, '')}.png`;
@@ -87,6 +91,7 @@ export async function renderReceiptPng(t: CustomerToken): Promise<Blob> {
   const rows: [string, string][] = [
     ['Customer', t.customerName],
     ['Service', t.serviceName],
+    ['Barber', barberLabel(t)],
     ['Price', formatPKR(t.priceAtBooking)],
     ['Booked', formatDateTimeLong(t.createdAt)],
     ['Status', STATUS_LABEL[t.status]],

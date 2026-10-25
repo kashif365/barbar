@@ -3,7 +3,9 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Pencil, Plus } from 'lucide-react';
 import { z } from 'zod';
-import { Banner, Button, Card, EmptyState, ErrorState, Field, Modal, PageHeader, Pill, Skeleton, inputCls } from '../../components/ui';
+import { BarberAvatar } from '../../components/BarberAvatar';
+import { Banner, Button, Card, EmptyState, ErrorState, Field, Modal, PageHeader, Pill, Skeleton, cx, inputCls } from '../../components/ui';
+import { MEDIA, barberPhoto } from '../../config/media';
 import { useToast } from '../../context/ToastContext';
 import { useAction } from '../../hooks/useAction';
 import { useFetch } from '../../hooks/useFetch';
@@ -39,14 +41,37 @@ function ServicePicker({ all, value, onChange }: { all: { id: string; name: stri
   );
 }
 
+/** Which team photo customers see for this barber. "Automatic" matches the account name. */
+function PhotoPicker({ name, value, onChange }: { name: string; value: string | null; onChange: (v: string | null) => void }) {
+  const auto = barberPhoto(name);
+  const options: { photo: string | null; label: string }[] = [{ photo: null, label: 'Automatic' }, ...MEDIA.team.map((m) => ({ photo: m.photo, label: m.name }))];
+  return (
+    <fieldset>
+      <legend className="mb-1 text-sm font-medium">Photo shown to customers</legend>
+      <p className="mb-2 text-xs text-muted">Automatic uses the team photo with the same name{auto ? '' : ' (none matches this name yet, so initials are shown)'}.</p>
+      <div role="radiogroup" className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        {options.map((o) => (
+          <label key={o.label} className={cx('flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border p-2 text-center text-[0.7rem] leading-tight focus-within:outline focus-within:outline-2 focus-within:outline-gold', value === o.photo ? 'border-gold bg-gold/10' : 'border-line hover:border-gold/50')}>
+            <input type="radio" name="photo" className="sr-only" checked={value === o.photo} onChange={() => onChange(o.photo)} />
+            <BarberAvatar name={o.photo ? o.label : name || '?'} photoUrl={o.photo ?? auto} className="h-12 w-12 text-sm" />
+            <span className="text-muted">{o.label}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 function CreateDialog({ services, onClose, onSaved }: { services: { id: string; name: string }[]; onClose: () => void; onSaved: () => void }) {
   const toast = useToast();
   const [ids, setIds] = useState<string[]>([]);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const { register, handleSubmit, setError, watch, formState: { errors, isSubmitting } } = useForm<z.infer<typeof createSchema>>({ resolver: zodResolver(createSchema), defaultValues: { role: 'barber', name: '', email: '', password: '' } });
   const role = watch('role');
+  const name = watch('name');
   const onSubmit = async (v: z.infer<typeof createSchema>) => {
     try {
-      await endpoints.createMember({ ...v, serviceIds: v.role === 'barber' ? ids : [] });
+      await endpoints.createMember({ ...v, serviceIds: v.role === 'barber' ? ids : [], photoUrl: v.role === 'barber' ? photoUrl : null });
       toast.success('Account created.');
       onSaved();
     } catch (e) {
@@ -66,6 +91,7 @@ function CreateDialog({ services, onClose, onSaved }: { services: { id: string; 
         <Field label="Temporary password" htmlFor="tm-pw" error={errors.password?.message} hint="At least 10 characters. Share it privately.">
           <input id="tm-pw" type="password" autoComplete="new-password" className={inputCls} {...register('password')} />
         </Field>
+        {role === 'barber' && <PhotoPicker name={name} value={photoUrl} onChange={setPhotoUrl} />}
         {role === 'barber' && <ServicePicker all={services} value={ids} onChange={setIds} />}
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button type="button" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
@@ -79,10 +105,12 @@ function CreateDialog({ services, onClose, onSaved }: { services: { id: string; 
 function EditDialog({ member, services, onClose, onSaved }: { member: TeamMember; services: { id: string; name: string }[]; onClose: () => void; onSaved: () => void }) {
   const toast = useToast();
   const [ids, setIds] = useState<string[]>(member.serviceIds);
-  const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<z.infer<typeof editSchema>>({ resolver: zodResolver(editSchema), defaultValues: { name: member.name, password: '' } });
+  const [photoUrl, setPhotoUrl] = useState<string | null>(member.photoUrl ?? null);
+  const { register, handleSubmit, setError, watch, formState: { errors, isSubmitting } } = useForm<z.infer<typeof editSchema>>({ resolver: zodResolver(editSchema), defaultValues: { name: member.name, password: '' } });
+  const name = watch('name');
   const onSubmit = async (v: z.infer<typeof editSchema>) => {
     try {
-      await endpoints.updateMember(member.id, { name: v.name, ...(v.password ? { password: v.password } : {}), ...(member.role === 'barber' ? { serviceIds: ids } : {}) });
+      await endpoints.updateMember(member.id, { name: v.name, ...(v.password ? { password: v.password } : {}), ...(member.role === 'barber' ? { serviceIds: ids, photoUrl } : {}) });
       toast.success('Changes saved.');
       onSaved();
     } catch (e) {
@@ -98,6 +126,7 @@ function EditDialog({ member, services, onClose, onSaved }: { member: TeamMember
         <Field label="Reset password (optional)" htmlFor="te-pw" error={errors.password?.message} hint="Leave blank to keep the current password.">
           <input id="te-pw" type="password" autoComplete="new-password" className={inputCls} {...register('password')} />
         </Field>
+        {member.role === 'barber' && <PhotoPicker name={name} value={photoUrl} onChange={setPhotoUrl} />}
         {member.role === 'barber' && <ServicePicker all={services} value={ids} onChange={setIds} />}
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button type="button" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
@@ -134,9 +163,12 @@ export default function OwnerTeam() {
               <li key={m.id}>
                 <Card className="space-y-3">
                   <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="font-semibold">{m.name}</p>
-                      <p className="truncate text-sm text-muted">{m.email}</p>
+                    <div className="flex min-w-0 items-center gap-3">
+                      {m.role === 'barber' && <BarberAvatar name={m.name} photoUrl={m.photoUrl} className="h-12 w-12 text-sm" />}
+                      <div className="min-w-0">
+                        <p className="font-semibold">{m.name}</p>
+                        <p className="truncate text-sm text-muted">{m.email}</p>
+                      </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Pill>{m.role === 'staff' ? 'Reception' : 'Barber'}</Pill>

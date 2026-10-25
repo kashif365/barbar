@@ -39,12 +39,19 @@ export const serviceCreateSchema = z.object({
 });
 export const serviceUpdateSchema = serviceCreateSchema.partial();
 
+/** Only the site's own team portraits; never an arbitrary URL. */
+const photoUrl = z
+  .string()
+  .regex(/^\/media\/team\/[a-z0-9-]+\.(jpg|jpeg|png|webp)$/, 'Choose one of the team photos')
+  .nullable();
+
 export const barberCreateSchema = z.object({
   name,
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(10, 'Use at least 10 characters').max(100),
   role: z.enum(['barber', 'staff']).default('barber'),
   serviceIds: z.array(objectId).max(50).default([]),
+  photoUrl: photoUrl.default(null),
 });
 export const barberUpdateSchema = z.object({
   name: name.optional(),
@@ -52,6 +59,7 @@ export const barberUpdateSchema = z.object({
   availability: z.enum(['available', 'on_break', 'offline']).optional(),
   serviceIds: z.array(objectId).max(50).optional(),
   password: z.string().min(10).max(100).optional(),
+  photoUrl: photoUrl.optional(),
 });
 
 export const ownerTokensQuery = z.object({

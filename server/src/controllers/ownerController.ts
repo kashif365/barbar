@@ -48,6 +48,7 @@ const barberView = (u: UserLean, completedToday = 0, busy = false) => ({
   email: u.email,
   role: u.role,
   isActive: u.isActive,
+  photoUrl: u.photoUrl ?? null,
   availability: u.barber?.availability ?? 'offline',
   serviceIds: (u.barber?.serviceIds ?? []).map(String),
   completedToday,
@@ -191,6 +192,7 @@ export const createBarber = asyncHandler(async (req, res) => {
     email: b.email,
     passwordHash: await hashPassword(b.password),
     role: b.role,
+    photoUrl: b.photoUrl,
     barber: { availability: 'offline', serviceIds: b.serviceIds },
   });
   await audit(req.user!, 'user.create', 'User', u._id, { role: b.role, email: b.email });
@@ -206,6 +208,7 @@ export const updateBarber = asyncHandler(async (req, res) => {
   if (b.availability !== undefined) set['barber.availability'] = b.availability;
   if (b.serviceIds !== undefined) set['barber.serviceIds'] = b.serviceIds;
   if (b.password !== undefined) set.passwordHash = await hashPassword(b.password);
+  if (b.photoUrl !== undefined) set.photoUrl = b.photoUrl;
 
   // The owner can only manage barber/staff accounts here — never other owners.
   const u = await User.findOneAndUpdate({ _id: id, role: { $in: ['barber', 'staff'] } }, { $set: set }, { new: true }).lean<UserLean>();

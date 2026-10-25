@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight, Clock, MapPin, Phone, Radio, Scissors, Smartphone, Ticket } from 'lucide-react';
+import { BeforeAfterSlider } from '../components/BeforeAfter';
 import { BackdropMedia, InViewVideo, MediaImage, Reveal, SmartImage } from '../components/Media';
 import { Logo } from '../components/Logo';
 import { ErrorState, Eyebrow, SectionTitle, Skeleton, cx } from '../components/ui';
@@ -212,6 +213,12 @@ export default function Home() {
       {/* ---------------- Lookbook ---------------- */}
       <Lookbook />
 
+      {/* ---------------- Before & after ---------------- */}
+      <BeforeAfterSection />
+
+      {/* ---------------- Team ---------------- */}
+      <TeamSection />
+
       {/* ---------------- CTA band ---------------- */}
       <CtaBand />
 
@@ -220,6 +227,17 @@ export default function Home() {
         <Reveal>
           <SectionTitle eyebrow="Visit us" title="Find the shop" />
         </Reveal>
+        <div className="mb-4 grid gap-4 md:grid-cols-[2fr_1fr]">
+          <Reveal className="relative aspect-[16/9] overflow-hidden rounded-[1.5rem] border border-line md:aspect-auto md:min-h-[22rem]">
+            <MediaImage src={MEDIA.shop.night} alt="The Shehraz Barber storefront at night, with the lit sign" />
+            <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/90 to-transparent p-5 pt-16">
+              <p className="font-display text-xl italic text-cream">Look for the lit sign</p>
+            </div>
+          </Reveal>
+          <Reveal delay={100} className="relative hidden overflow-hidden rounded-[1.5rem] border border-line md:block">
+            <MediaImage src={MEDIA.shop.day} alt="The shop entrance by day" />
+          </Reveal>
+        </div>
         <div className="grid gap-4 md:grid-cols-3">
           {[
             { icon: MapPin, label: 'Address', value: s?.address, empty: 'Address coming soon.' },
@@ -293,6 +311,71 @@ function Lookbook() {
             ))}
           </div>
         )}
+      </div>
+    </section>
+  );
+}
+
+function BeforeAfterSection() {
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:py-28">
+      <Reveal>
+        <SectionTitle eyebrow="Before & after" title={<>The difference <span className="text-gold-gradient italic">one chair makes</span></>}>
+          Real clients, same day, same chair. Drag the handle to compare.
+        </SectionTitle>
+      </Reveal>
+      <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+        {MEDIA.beforeAfter.map((p, i) => (
+          <Reveal key={p.before} delay={(i % 4) * 90} className="w-[78%] shrink-0 snap-center sm:w-auto">
+            <BeforeAfterSlider before={p.before} after={p.after} title={p.title} />
+          </Reveal>
+        ))}
+      </div>
+
+      <div className="mt-14">
+        <p className="mb-4 text-[0.7rem] font-bold uppercase tracking-[0.24em] text-gold">Fresh cuts</p>
+        <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-6">
+          {MEDIA.cuts.map((c, i) => (
+            <Reveal as="li" key={c.src} delay={(i % 6) * 60} className="group relative aspect-[3/4] w-[44%] shrink-0 snap-start overflow-hidden rounded-[1.25rem] border border-line sm:w-auto">
+              <MediaImage src={c.src} alt={c.caption} className="transition-transform duration-700 group-hover:scale-105" />
+              <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/90 to-transparent p-3 pt-10">
+                <p className="font-display text-base italic text-cream">{c.caption}</p>
+              </div>
+            </Reveal>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+function TeamSection() {
+  return (
+    <section className="relative overflow-hidden border-y border-line bg-panel">
+      <div aria-hidden className="bg-spotlight absolute inset-0" />
+      <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:py-28">
+        <Reveal>
+          <SectionTitle center eyebrow="The team" title={<>Meet your <span className="text-gold-gradient italic">barbers</span></>}>
+            Pick your barber when you take a token, or let the first free chair take you.
+          </SectionTitle>
+        </Reveal>
+        <ul className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5">
+          {MEDIA.team.map((m, i) => (
+            <Reveal as="li" key={m.name} delay={(i % 5) * 80} className="group w-[62%] shrink-0 snap-center sm:w-auto">
+              <div className="relative aspect-[3/4] overflow-hidden rounded-[1.5rem] border border-line transition-colors group-hover:border-gold/60">
+                <MediaImage src={m.photo} alt={`${m.name}, barber at The Shehraz Barber`} placeholderLabel={m.name} className="object-top transition-transform duration-700 group-hover:scale-105" />
+                <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ink/80 to-transparent" />
+              </div>
+              <p className="mt-4 font-display text-xl text-cream">{m.name}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-gold">Barber</p>
+            </Reveal>
+          ))}
+        </ul>
+        <div className="mt-12 text-center">
+          <Link to="/book" className="inline-flex min-h-12 items-center gap-2 rounded-full border border-gold/50 px-7 text-sm font-bold uppercase tracking-[0.14em] text-gold-strong transition hover:bg-gold hover:text-ink">
+            Book your barber <ArrowRight className="h-4 w-4" aria-hidden />
+          </Link>
+        </div>
       </div>
     </section>
   );

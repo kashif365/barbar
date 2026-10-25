@@ -10,6 +10,8 @@ export interface IUser {
   passwordHash: string;
   role: Role;
   isActive: boolean;
+  /** Portrait shown to customers (team section, booking, their token). A path under /media/team/. */
+  photoUrl: string | null;
   barber: {
     availability: Availability;
     /** Empty = can serve every service. Otherwise only these. */
@@ -28,6 +30,7 @@ const userSchema = new Schema<IUser>(
     passwordHash: { type: String, required: true, select: false },
     role: { type: String, enum: ['owner', 'barber', 'staff'], required: true },
     isActive: { type: Boolean, default: true },
+    photoUrl: { type: String, default: null, maxlength: 200 },
     barber: {
       type: new Schema(
         {
