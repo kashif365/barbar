@@ -153,6 +153,12 @@ export default function Home() {
         </Reveal>
       </section>
 
+      {/* ---------------- Before & after ---------------- */}
+      <BeforeAfterSection />
+
+      {/* ---------------- Team ---------------- */}
+      <TeamSection />
+
       {/* ---------------- Services menu ---------------- */}
       <section className="relative overflow-hidden border-y border-line bg-panel">
         <div aria-hidden className="bg-spotlight absolute inset-0" />
@@ -193,31 +199,27 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ---------------- How it works ---------------- */}
-      <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:py-32">
-        <Reveal>
-          <SectionTitle eyebrow="How it works" title={<>From your phone <span className="text-gold-gradient italic">to the chair</span></>} />
-        </Reveal>
-        <ol className="grid gap-px overflow-hidden rounded-[2rem] border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
-          {steps.map((st, i) => (
-            <Reveal as="li" key={st.title} delay={i * 100} className="group relative bg-ink p-8 transition-colors hover:bg-card">
-              <span className="font-display text-gold-gradient text-6xl font-semibold opacity-90">0{i + 1}</span>
-              <st.icon className="absolute right-8 top-9 h-6 w-6 text-gold/60 transition-colors group-hover:text-gold" strokeWidth={1.5} aria-hidden />
-              <h3 className="mt-6 font-display text-2xl text-cream">{st.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted">{st.text}</p>
-            </Reveal>
-          ))}
-        </ol>
-      </section>
-
       {/* ---------------- Lookbook ---------------- */}
       <Lookbook />
 
-      {/* ---------------- Before & after ---------------- */}
-      <BeforeAfterSection />
-
-      {/* ---------------- Team ---------------- */}
-      <TeamSection />
+      {/* ---------------- How it works ---------------- */}
+      <section className="border-y border-line bg-panel">
+        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:py-32">
+          <Reveal>
+            <SectionTitle eyebrow="How it works" title={<>From your phone <span className="text-gold-gradient italic">to the chair</span></>} />
+          </Reveal>
+          <ol className="grid gap-px overflow-hidden rounded-[2rem] border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+            {steps.map((st, i) => (
+              <Reveal as="li" key={st.title} delay={i * 100} className="group relative bg-ink p-8 transition-colors hover:bg-card">
+                <span className="font-display text-gold-gradient text-6xl font-semibold opacity-90">0{i + 1}</span>
+                <st.icon className="absolute right-8 top-9 h-6 w-6 text-gold/60 transition-colors group-hover:text-gold" strokeWidth={1.5} aria-hidden />
+                <h3 className="mt-6 font-display text-2xl text-cream">{st.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted">{st.text}</p>
+              </Reveal>
+            ))}
+          </ol>
+        </div>
+      </section>
 
       {/* ---------------- CTA band ---------------- */}
       <CtaBand />
@@ -294,7 +296,7 @@ function Lookbook() {
   // Bento layout on large screens: first tile is tall, fourth is wide.
   const span = ['row-span-2', '', '', 'lg:col-span-2', '', 'col-span-2 lg:col-span-1'];
   return (
-    <section className="border-t border-line bg-panel">
+    <section>
       <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:py-28">
         <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
           <SectionTitle eyebrow="Lookbook" title={<>Fresh from <span className="text-gold-gradient italic">the chair</span></>} />
@@ -318,32 +320,34 @@ function Lookbook() {
 
 function BeforeAfterSection() {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:py-28">
-      <Reveal>
-        <SectionTitle eyebrow="Before & after" title={<>The difference <span className="text-gold-gradient italic">one chair makes</span></>}>
-          Real clients, same day, same chair. Drag the handle to compare.
-        </SectionTitle>
-      </Reveal>
-      <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
-        {MEDIA.beforeAfter.map((p, i) => (
-          <Reveal key={p.before} delay={(i % 4) * 90} className="w-[78%] shrink-0 snap-center sm:w-auto">
-            <BeforeAfterSlider before={p.before} after={p.after} title={p.title} />
-          </Reveal>
-        ))}
-      </div>
-
-      <div className="mt-14">
-        <p className="mb-4 text-[0.7rem] font-bold uppercase tracking-[0.24em] text-gold">Fresh cuts</p>
-        <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-6">
-          {MEDIA.cuts.map((c, i) => (
-            <Reveal as="li" key={c.src} delay={(i % 6) * 60} className="group relative aspect-[3/4] w-[44%] shrink-0 snap-start overflow-hidden rounded-[1.25rem] border border-line sm:w-auto">
-              <MediaImage src={c.src} alt={c.caption} className="transition-transform duration-700 group-hover:scale-105" />
-              <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/90 to-transparent p-3 pt-10">
-                <p className="font-display text-base italic text-cream">{c.caption}</p>
-              </div>
+    <section className="border-y border-line bg-panel">
+      <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:py-28">
+        <Reveal>
+          <SectionTitle eyebrow="Before & after" title={<>The difference <span className="text-gold-gradient italic">one chair makes</span></>}>
+            Real clients, same day, same chair. Drag the handle to compare.
+          </SectionTitle>
+        </Reveal>
+        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+          {MEDIA.beforeAfter.map((p, i) => (
+            <Reveal key={p.before} delay={(i % 4) * 90} className="w-[78%] shrink-0 snap-center sm:w-auto">
+              <BeforeAfterSlider before={p.before} after={p.after} title={p.title} />
             </Reveal>
           ))}
-        </ul>
+        </div>
+
+        <div className="mt-14">
+          <p className="mb-4 text-[0.7rem] font-bold uppercase tracking-[0.24em] text-gold">Fresh cuts</p>
+          <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-6">
+            {MEDIA.cuts.map((c, i) => (
+              <Reveal as="li" key={c.src} delay={(i % 6) * 60} className="group relative aspect-[3/4] w-[44%] shrink-0 snap-start overflow-hidden rounded-[1.25rem] border border-line sm:w-auto">
+                <MediaImage src={c.src} alt={c.caption} className="transition-transform duration-700 group-hover:scale-105" />
+                <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/90 to-transparent p-3 pt-10">
+                  <p className="font-display text-base italic text-cream">{c.caption}</p>
+                </div>
+              </Reveal>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );
@@ -351,8 +355,7 @@ function BeforeAfterSection() {
 
 function TeamSection() {
   return (
-    <section className="relative overflow-hidden border-y border-line bg-panel">
-      <div aria-hidden className="bg-spotlight absolute inset-0" />
+    <section className="relative overflow-hidden">
       <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:py-28">
         <Reveal>
           <SectionTitle center eyebrow="The team" title={<>Meet your <span className="text-gold-gradient italic">barbers</span></>}>

@@ -10,4 +10,4 @@ api/          -> upload to a folder OUTSIDE public_html (e.g. /home/<user>/shehr
                  First time only: run the "seed" script to create services and the owner account,
                  then remove OWNER_PASSWORD from .env.
 
-Built: 2026-10-25T11:15:47.155Z
+Built: 2026-10-25T11:35:14.564Z
